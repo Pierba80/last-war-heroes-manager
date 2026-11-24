@@ -125,8 +125,7 @@ export default function App() {
       return next;
     });
   };
-
-  const handleExport = () => {
+                  const handleExport = () => {
     try {
       const backupPayload = JSON.stringify({ progress, squads }, null, 2);
       const blob = new Blob([backupPayload], { type: 'application/json' });
@@ -300,4 +299,8 @@ export default function App() {
       )}
 
       {activeView === 'resources' && (
-        
+        <ResourcesView progress={progress} squads={squads} />
+      )}
+    </div>
+  );
+              }

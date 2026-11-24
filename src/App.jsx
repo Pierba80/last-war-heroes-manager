@@ -218,10 +218,14 @@ export default function App() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <div>
-          <h1 style={{ fontSize: '20px', margin: 0, color: '#facc15' }}>Last War Manager</h1>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>Heroes, Gear & Squads</span>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+          <img
+            src="/logo.png"
+            alt="Logo"
+            style={{ maxHeight: '44px', maxWidth: '200px', objectFit: 'contain' }}
+          />
         </div>
+        
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={handleCopyBackup} title="Copy Backup Text" style={styles.iconBtn}>
             <Copy size={17} />

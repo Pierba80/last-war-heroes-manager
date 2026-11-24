@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, Sword, Wrench } from 'lucide-react';
+import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, Sword, Wrench, RotateCcw } from 'lucide-react';
 import { calculateShardsNeeded } from '../data/heroesData';
 import HeroSkillsSection from './HeroSkillsSection';
 import HeroGearSection from './HeroGearSection';
@@ -14,6 +14,27 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
 
   const toggleTab = (tab) => {
     setActiveTab((prev) => (prev === tab ? 'none' : tab));
+  };
+
+  const handleResetHero = () => {
+    if (!window.confirm(`Reset all stats, skills and gear for ${hero.name}?`)) return;
+    onUpdate(hero.id, {
+      unlocked: hero.rarity !== 'UR',
+      isPromotedUR: false,
+      level: 1,
+      stars: 0,
+      tiers: 0,
+      skills: Array(3).fill(1),
+      exclusiveWeaponLevel: 0,
+      awakeningStars: 0,
+      awakeningSkill: 1,
+      gear: {
+        railgun: { rarity: 'None', level: 0, stars: 0 },
+        chip: { rarity: 'None', level: 0, stars: 0 },
+        armor: { rarity: 'None', level: 0, stars: 0 },
+        radar: { rarity: 'None', level: 0, stars: 0 },
+      },
+    });
   };
 
   const getTypeIcon = (type) => {
@@ -55,7 +76,7 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
         opacity: progress.unlocked ? 1 : 0.6,
       }}
     >
-      {/* Row 1: Avatar, Name, Role, Squad, Unlock */}
+      {/* Row 1: Avatar, Name, Role, Squad, Reset, Unlock */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <HeroAvatar
@@ -79,12 +100,20 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           {progress.squad && (
-            <span style={{ fontSize: '11px', padding: '3px 7px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#facc15', fontWeight: 'bold' }}>
+            <span style={{ fontSize: '11px', padding: '3px 7px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#facc15', fontWeight: 'bold', marginRight: '2px' }}>
               Squad {progress.squad}
             </span>
           )}
+
+          <button
+            onClick={handleResetHero}
+            title="Reset Hero Setup"
+            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}
+          >
+            <RotateCcw size={15} />
+          </button>
 
           <button
             onClick={() => onUpdate(hero.id, { unlocked: !progress.unlocked })}
@@ -201,5 +230,4 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
       )}
     </div>
   );
-      }
-                                           
+}

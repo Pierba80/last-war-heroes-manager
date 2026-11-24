@@ -7,6 +7,7 @@ import { styles } from './styles';
 
 const STORAGE_KEY = 'last_war_heroes_progress_v1';
 const SQUADS_STORAGE_KEY = 'last_war_squads_v1';
+const SQUAD_NUMBERS = Array.from({ length: 3 }, (_, i) => i + 1);
 
 const DEFAULT_SQUADS = {
   1: { front1: null, front2: null, back1: null, back2: null, back3: null },
@@ -15,7 +16,7 @@ const DEFAULT_SQUADS = {
 };
 
 export default function App() {
-  const [activeView, setActiveView] = useState('heroes'); // 'heroes' | 'squads'
+  const [activeView, setActiveView] = useState('heroes');
 
   const [progress, setProgress] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -71,14 +72,13 @@ export default function App() {
     });
   };
 
-  // Sync squad assignments between SquadsView and HeroCard badges
   const syncHeroSquadBadges = (nextSquads) => {
     setProgress((prev) => {
       const updated = { ...prev };
       Object.keys(updated).forEach((id) => {
         updated[id] = { ...updated[id], squad: null };
       });
-      [1, 2, 3].forEach((sqNum) => {
+      SQUAD_NUMBERS.forEach((sqNum) => {
         const slots = nextSquads[sqNum] || {};
         Object.values(slots).forEach((heroId) => {
           if (heroId && updated[heroId]) {
@@ -93,12 +93,11 @@ export default function App() {
   const handleAssignSlot = (squadNum, slotKey, heroId) => {
     setSquads((prev) => {
       const next = {
-        1: { ...prev[1] },
-        2: { ...prev[2] },
-        3: { ...prev[3] },
+        1: { ...prev.1 },
+        2: { ...prev.2 },
+        3: { ...prev.3 },
       };
-      // Remove hero if already placed in another slot/squad
-      [1, 2, 3].forEach((num) => {
+      SQUAD_NUMBERS.forEach((num) => {
         Object.keys(next[num]).forEach((k) => {
           if (next[num][k] === heroId) {
             next[num][k] = null;
@@ -149,7 +148,6 @@ export default function App() {
             setSquads({ ...DEFAULT_SQUADS, ...imported.squads });
           }
         } else {
-          // Support older backups containing only hero progress
           setProgress({ ...createDefaultProgress(), ...imported });
         }
         alert('Backup imported successfully!');
@@ -202,7 +200,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Navigation Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
         <button onClick={() => setActiveView('heroes')} style={navTabStyle(activeView === 'heroes')}>
           <Shield size={16} /> Heroes ({INITIAL_HEROES.length})
@@ -265,5 +262,4 @@ export default function App() {
       )}
     </div>
   );
-          }
-        
+}

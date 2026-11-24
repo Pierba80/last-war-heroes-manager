@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Users, Shield, Copy, Calculator } from 'lucide-react';
+import { Download, Upload, Users, Shield, Copy, Calculator, Volume2, VolumeX } from 'lucide-react';
 import { INITIAL_HEROES, createDefaultProgress } from './data/heroesData';
 import HeroCard from './components/HeroCard';
 import SquadsView from './components/SquadsView';
 import ResourcesView from './components/ResourcesView';
+import { musicPlayer } from './utils/musicPlayer';
 import { styles } from './styles';
 
 const STORAGE_KEY = 'last_war_heroes_progress_v1';
@@ -18,6 +19,7 @@ const DEFAULT_SQUADS = {
 
 export default function App() {
   const [activeView, setActiveView] = useState('heroes');
+  const [musicOn, setMusicOn] = useState(false);
   const fileInputRef = useRef(null);
 
   const [progress, setProgress] = useState(() => {
@@ -55,6 +57,22 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(SQUADS_STORAGE_KEY, JSON.stringify(squads));
   }, [squads]);
+
+  useEffect(() => {
+    return () => {
+      musicPlayer.stop();
+    };
+  }, []);
+
+  const handleToggleMusic = async () => {
+    if (musicOn) {
+      musicPlayer.stop();
+      setMusicOn(false);
+    } else {
+      const started = await musicPlayer.start();
+      setMusicOn(started);
+    }
+  };
 
   const updateHero = (id, changes) => {
     setProgress((prev) => ({
@@ -125,7 +143,8 @@ export default function App() {
       return next;
     });
   };
-    const handleRemoveHeroFromSquad = (heroId) => {
+
+  const handleRemoveHeroFromSquad = (heroId) => {
     setSquads((prev) => {
       const next = JSON.parse(JSON.stringify(prev));
       SQUAD_NUMBERS.forEach((num) => {
@@ -139,8 +158,7 @@ export default function App() {
       return next;
     });
   };
-
-                  const handleExport = () => {
+  const handleExport = () => {
     try {
       const backupPayload = JSON.stringify({ progress, squads }, null, 2);
       const blob = new Blob([backupPayload], { type: 'application/json' });
@@ -222,7 +240,7 @@ export default function App() {
           <img
             src="/Logo.png"
             alt="Logo"
-            style={{ maxHeight: '40px', maxWidth: '145px', objectFit: 'contain' }}
+            style={{ maxHeight: '40px', maxWidth: '130px', objectFit: 'contain' }}
           />
           <span
             style={{
@@ -237,19 +255,31 @@ export default function App() {
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+          <button
+            onClick={handleToggleMusic}
+            title={musicOn ? 'Music ON (Tap to mute)' : 'Music OFF (Tap to play)'}
+            style={{
+              ...styles.iconBtn,
+              borderColor: musicOn ? '#facc15' : '#334155',
+              color: musicOn ? '#facc15' : '#94a3b8',
+            }}
+          >
+            {musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          </button>
+
           <button onClick={handleCopyBackup} title="Copy Backup Text" style={styles.iconBtn}>
-            <Copy size={17} />
+            <Copy size={16} />
           </button>
           <button onClick={handleExport} title="Download Backup File" style={styles.iconBtn}>
-            <Download size={17} />
+            <Download size={16} />
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             title="Import Backup File"
             style={styles.iconBtn}
           >
-            <Upload size={17} />
+            <Upload size={16} />
           </button>
           <input
             ref={fileInputRef}
@@ -334,5 +364,5 @@ export default function App() {
       )}
     </div>
   );
-      }
-                      
+              }
+              

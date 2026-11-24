@@ -1,9 +1,11 @@
-import React from 'react';
-import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, ChevronDown, ChevronUp } from 'lucide-react';
 import { calculateShardsNeeded } from '../data/heroesData';
+import HeroSkillsSection from './HeroSkillsSection';
 import { styles } from '../styles';
 
 export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
+  const [showDetails, setShowDetails] = useState(true);
   const shards = calculateShardsNeeded(progress.stars, progress.tiers, progress.isPromotedUR);
 
   const getTypeIcon = (type) => {
@@ -153,7 +155,37 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
           <button onClick={() => onChangeTier(hero.id, 1)} style={{ ...styles.smallBtn, backgroundColor: '#2563eb' }}>+1</button>
         </div>
       </div>
+
+      {/* Toggle Button & Skills/Weapon/Awakening Section */}
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        style={{
+          width: '100%',
+          marginTop: '8px',
+          padding: '6px',
+          backgroundColor: 'transparent',
+          border: '1px solid #334155',
+          borderRadius: '6px',
+          color: '#94a3b8',
+          fontSize: '11px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '4px',
+          cursor: 'pointer',
+        }}
+      >
+        {showDetails ? (
+          <>Hide Skills & Weapon <ChevronUp size={14} /></>
+        ) : (
+          <>Show Skills & Weapon <ChevronDown size={14} /></>
+        )}
+      </button>
+
+      {showDetails && (
+        <HeroSkillsSection hero={hero} progress={progress} onUpdate={onUpdate} />
+      )}
     </div>
   );
-        }
-        
+      }
+              

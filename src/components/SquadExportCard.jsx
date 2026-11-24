@@ -89,13 +89,15 @@ export default function SquadExportCard({ exportRef, squads, progress, getSynerg
               color: '#94a3b8',
               fontSize: '13px',
             }}
-          >
-            {p.avatar ? (
-              <img src={p.avatar} alt={hero.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              hero.name.slice(0, 2).toUpperCase()
-            )}
-          </div>
+           <img
+              src={p.avatar || `/heroes/${hero.id}.png`}
+              alt={hero.name}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+
 
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: '8px', color: '#94a3b8', textTransform: 'uppercase' }}>{positionLabel}</div>

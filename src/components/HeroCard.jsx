@@ -103,28 +103,37 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           {progress.squad && (
             <button
-              onClick={() => onRemoveFromSquad(hero.id)}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onRemoveFromSquad) {
+                  onRemoveFromSquad(hero.id);
+                } else {
+                  onUpdate(hero.id, { squad: null });
+                }
+              }}
               title="Remove from Squad"
               style={{
-                fontSize: '11px',
-                padding: '3px 7px',
-                borderRadius: '6px',
+                fontSize: '12px',
+                padding: '6px 10px',
+                borderRadius: '8px',
                 backgroundColor: '#0f172a',
                 border: '1px solid #facc15',
                 color: '#facc15',
                 fontWeight: 'bold',
-                marginRight: '2px',
+                marginRight: '4px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
                 cursor: 'pointer',
               }}
             >
-              Squad {progress.squad} <X size={11} />
+              Squad {progress.squad} <X size={13} />
             </button>
           )}
 
           <button
+            type="button"
             onClick={handleResetHero}
             title="Reset Hero Setup"
             style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}
@@ -133,6 +142,7 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
           </button>
 
           <button
+            type="button"
             onClick={() => onUpdate(hero.id, { unlocked: !progress.unlocked })}
             title={progress.unlocked ? 'Unlocked' : 'Locked'}
             style={{ background: 'none', border: 'none', color: progress.unlocked ? '#4ade80' : '#94a3b8', cursor: 'pointer', padding: '4px' }}
@@ -146,7 +156,7 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '13px', color: '#94a3b8' }}>Level:</span>
-          <button onClick={() => onUpdate(hero.id, { level: Math.max(1, progress.level - 1) })} style={styles.smallBtn}>
+          <button type="button" onClick={() => onUpdate(hero.id, { level: Math.max(1, progress.level - 1) })} style={styles.smallBtn}>
             <Minus size={14} />
           </button>
           <input
@@ -166,13 +176,14 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
               fontWeight: 'bold',
             }}
           />
-          <button onClick={() => onUpdate(hero.id, { level: progress.level + 1 })} style={styles.smallBtn}>
+          <button type="button" onClick={() => onUpdate(hero.id, { level: progress.level + 1 })} style={styles.smallBtn}>
             <Plus size={14} />
           </button>
         </div>
 
         {hero.canPromoteUR && (
           <button
+            type="button"
             onClick={() => onUpdate(hero.id, { isPromotedUR: !progress.isPromotedUR })}
             style={{
               display: 'flex',
@@ -223,17 +234,17 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
         </div>
 
         <div style={{ display: 'flex', gap: '6px' }}>
-          <button onClick={() => onChangeTier(hero.id, -1)} style={styles.smallBtn}>-1</button>
-          <button onClick={() => onChangeTier(hero.id, 1)} style={{ ...styles.smallBtn, backgroundColor: '#2563eb' }}>+1</button>
+          <button type="button" onClick={() => onChangeTier(hero.id, -1)} style={styles.smallBtn}>-1</button>
+          <button type="button" onClick={() => onChangeTier(hero.id, 1)} style={{ ...styles.smallBtn, backgroundColor: '#2563eb' }}>+1</button>
         </div>
       </div>
 
       {/* Toggle Tabs: Skills & Gear */}
       <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-        <button onClick={() => toggleTab('skills')} style={tabBtnStyle(activeTab === 'skills')}>
+        <button type="button" onClick={() => toggleTab('skills')} style={tabBtnStyle(activeTab === 'skills')}>
           <Sword size={13} /> Skills & Weapon
         </button>
-        <button onClick={() => toggleTab('gear')} style={tabBtnStyle(activeTab === 'gear')}>
+        <button type="button" onClick={() => toggleTab('gear')} style={tabBtnStyle(activeTab === 'gear')}>
           <Wrench size={13} /> Gear (4 Slots)
         </button>
       </div>

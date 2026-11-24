@@ -1,0 +1,5 @@
+<svg xmlns="http://w3.org" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0f172a"/>
+  <path d="M256 72L104 136v112c0 98.4 64.8 190.4 152 216 87.2-25.6 152-117.6 152-216V136L256 72z" fill="#1e293b" stroke="#facc15" stroke-width="24" stroke-linejoin="round"/>
+  <text x="256" y="295" font-family="system-ui, -apple-system, sans-serif" font-size="136" font-weight="900" fill="#facc15" text-anchor="middle">LW</text>
+</svg>

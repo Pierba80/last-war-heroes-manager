@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Shield, Plane, Rocket, Users, X, Sparkles } from 'lucide-react';
+import { Shield, Plane, Rocket, Users, X, Sparkles, RotateCcw } from 'lucide-react';
 import { INITIAL_HEROES } from '../data/heroesData';
 import HeroAvatar from './HeroAvatar';
 import HeroPickerModal from './HeroPickerModal';
 import { styles } from '../styles';
 
 const SQUAD_TABS = Array.from({ length: 3 }, (_, i) => i + 1);
-
 
 const SLOTS = [
   { key: 'front1', label: 'Front Left', row: 'front' },
@@ -30,9 +29,9 @@ const getSquadSynergy = (heroIds) => {
     counts[h.type] = (counts[h.type] || 0) + 1;
   });
 
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const [topType, topCount] = sorted[0];
-  const [, secondCount] = sorted[1];
+  const sorted = Object.entries(counts).sort((a, b) => b - a);
+  const [topType, topCount] = sorted;
+  const [, secondCount] = sorted;
 
   let bonus = 0;
   let label = 'No Type Synergy (<3 same type)';
@@ -64,13 +63,20 @@ const getSquadSynergy = (heroIds) => {
   };
 };
 
-export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot }) {
+export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot, onResetSquad }) {
   const [selectedSquad, setSelectedSquad] = useState(1);
   const [pickingSlot, setPickingSlot] = useState(null);
 
   const currentSquadSlots = squads[selectedSquad] || {};
   const assignedIds = Object.values(currentSquadSlots).filter(Boolean);
   const synergy = getSquadSynergy(assignedIds);
+
+  const handleResetCurrentSquad = () => {
+    if (assignedIds.length === 0) return;
+    if (window.confirm(`Clear all 5 heroes from Squad ${selectedSquad}?`)) {
+      onResetSquad(selectedSquad);
+    }
+  };
 
   const getRarityBorder = (hero) => {
     const p = progress[hero.id] || {};
@@ -190,7 +196,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         ))}
       </div>
 
-      {/* Synergy Banner */}
+      {/* Synergy Banner + Reset Squad Button */}
       <div
         style={{
           backgroundColor: '#1e293b',
@@ -198,18 +204,47 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
           borderRadius: '10px',
           padding: '10px 12px',
           marginBottom: '14px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '8px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-          <Sparkles size={15} color={synergy.bonus > 0 ? '#facc15' : '#64748b'} />
-          <strong style={{ fontSize: '13px', color: synergy.bonus > 0 ? '#facc15' : '#cbd5e1' }}>
-            {synergy.label}
-          </strong>
-        </div>
-        {synergy.counter && (
-          <div style={{ fontSize: '11px', color: '#4ade80', marginLeft: '21px' }}>
-            {synergy.counter}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+            <Sparkles size={15} color={synergy.bonus > 0 ? '#facc15' : '#64748b'} />
+            <strong style={{ fontSize: '13px', color: synergy.bonus > 0 ? '#facc15' : '#cbd5e1' }}>
+              {synergy.label}
+            </strong>
           </div>
+          {synergy.counter && (
+            <div style={{ fontSize: '11px', color: '#4ade80', marginLeft: '21px' }}>
+              {synergy.counter}
+            </div>
+          )}
+        </div>
+
+        {assignedIds.length > 0 && (
+          <button
+            onClick={handleResetCurrentSquad}
+            title="Clear all heroes from this squad"
+            style={{
+              backgroundColor: '#7f1d1d',
+              border: '1px solid #ef4444',
+              color: '#fca5a5',
+              borderRadius: '6px',
+              padding: '6px 8px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <RotateCcw size={12} /> Reset
+          </button>
         )}
       </div>
 
@@ -249,4 +284,4 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
     </div>
   );
       }
-      
+        

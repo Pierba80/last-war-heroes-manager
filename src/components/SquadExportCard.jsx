@@ -1,6 +1,7 @@
 import React from 'react';
 import { INITIAL_HEROES } from '../data/heroesData';
 
+const SQUAD_NUMS = Array.from({ length: 3 }, (_, i) => i + 1);
 const FRONT_KEYS = ['front1', 'front2'];
 const BACK_KEYS = ['back1', 'back2', 'back3'];
 const GEAR_LIST = [
@@ -10,7 +11,7 @@ const GEAR_LIST = [
   { key: 'radar', short: 'Radar' },
 ];
 
-export default function SquadExportCard({ exportRef, squadNum, slots, progress, synergy }) {
+export default function SquadExportCard({ exportRef, squads, progress, getSynergyFn }) {
   const getRarityColor = (rarity, isPromoted) => {
     const eff = isPromoted ? 'UR' : rarity;
     if (eff === 'UR') return '#eab308';
@@ -25,7 +26,7 @@ export default function SquadExportCard({ exportRef, squadNum, slots, progress, 
     return '#64748b';
   };
 
-  const renderHeroBox = (slotKey, positionLabel) => {
+  const renderHeroBox = (slots, slotKey, positionLabel) => {
     const heroId = slots[slotKey];
     const hero = INITIAL_HEROES.find((h) => h.id === heroId);
 
@@ -36,19 +37,19 @@ export default function SquadExportCard({ exportRef, squadNum, slots, progress, 
           style={{
             backgroundColor: '#1e293b',
             border: '1px dashed #475569',
-            borderRadius: '10px',
-            padding: '12px',
+            borderRadius: '8px',
+            padding: '10px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            minHeight: '190px',
+            minHeight: '165px',
             color: '#64748b',
-            fontSize: '12px',
+            fontSize: '11px',
           }}
         >
-          <div style={{ fontSize: '10px', marginBottom: '4px' }}>{positionLabel}</div>
-          Empty Slot
+          <div style={{ fontSize: '9px', marginBottom: '3px' }}>{positionLabel}</div>
+          Empty
         </div>
       );
     }
@@ -64,21 +65,20 @@ export default function SquadExportCard({ exportRef, squadNum, slots, progress, 
         style={{
           backgroundColor: '#1e293b',
           border: `2px solid ${borderCol}`,
-          borderRadius: '10px',
-          padding: '10px',
+          borderRadius: '8px',
+          padding: '8px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px',
+          gap: '5px',
         }}
       >
-        {/* Top: Avatar + Name + Level */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
           <div
             style={{
-              width: '44px',
-              height: '44px',
-              minWidth: '44px',
-              borderRadius: '8px',
+              width: '40px',
+              height: '40px',
+              minWidth: '40px',
+              borderRadius: '7px',
               border: `2px solid ${borderCol}`,
               backgroundColor: '#0f172a',
               overflow: 'hidden',
@@ -87,7 +87,7 @@ export default function SquadExportCard({ exportRef, squadNum, slots, progress, 
               justifyContent: 'center',
               fontWeight: 'bold',
               color: '#94a3b8',
-              fontSize: '14px',
+              fontSize: '13px',
             }}
           >
             {p.avatar ? (
@@ -98,42 +98,39 @@ export default function SquadExportCard({ exportRef, squadNum, slots, progress, 
           </div>
 
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: '9px', color: '#94a3b8', textTransform: 'uppercase' }}>{positionLabel}</div>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontSize: '8px', color: '#94a3b8', textTransform: 'uppercase' }}>{positionLabel}</div>
+            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {hero.name}
             </div>
-            <div style={{ fontSize: '11px', color: '#facc15', fontWeight: 'bold' }}>
+            <div style={{ fontSize: '10px', color: '#facc15', fontWeight: 'bold' }}>
               Lv.{p.level || 1} • {p.stars || 0}★ {p.tiers > 0 ? `(${p.tiers}/5)` : ''}
             </div>
           </div>
         </div>
 
-        {/* Exclusive Weapon & Awakening */}
         {(p.exclusiveWeaponLevel > 0 || p.awakeningStars > 0) && (
-          <div style={{ backgroundColor: '#0f172a', padding: '4px 6px', borderRadius: '6px', fontSize: '10px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+          <div style={{ backgroundColor: '#0f172a', padding: '3px 5px', borderRadius: '5px', fontSize: '9px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '3px' }}>
             {p.exclusiveWeaponLevel > 0 && (
               <span style={{ color: '#fb923c', fontWeight: 'bold' }}>
-                Weapon: Lv.{p.exclusiveWeaponLevel}
+                Wpn: Lv.{p.exclusiveWeaponLevel}
               </span>
             )}
             {p.awakeningStars > 0 && (
               <span style={{ color: '#f87171', fontWeight: 'bold' }}>
-                Awaken: {p.awakeningStars}★ (4th: Lv.{p.awakeningSkill || 1})
+                Awk: {p.awakeningStars}★ (Lv.{p.awakeningSkill || 1})
               </span>
             )}
           </div>
         )}
 
-        {/* 3 Base Skills */}
-        <div style={{ backgroundColor: '#0f172a', padding: '4px 6px', borderRadius: '6px', fontSize: '10px', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ backgroundColor: '#0f172a', padding: '3px 5px', borderRadius: '5px', fontSize: '9px', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
           <span>Skills:</span>
           <strong style={{ color: '#38bdf8' }}>
             {skills.at(0)} / {skills.at(1)} / {skills.at(2)}
           </strong>
         </div>
 
-        {/* 4 Gear Slots */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px' }}>
           {GEAR_LIST.map(({ key, short }) => {
             const g = gear[key] || { rarity: 'None', level: 0, stars: 0 };
             const gColor = getGearColor(g.rarity);
@@ -142,10 +139,10 @@ export default function SquadExportCard({ exportRef, squadNum, slots, progress, 
                 key={key}
                 style={{
                   backgroundColor: '#0f172a',
-                  borderLeft: `3px solid ${gColor}`,
-                  padding: '3px 5px',
-                  borderRadius: '4px',
-                  fontSize: '9px',
+                  borderLeft: `2px solid ${gColor}`,
+                  padding: '2px 4px',
+                  borderRadius: '3px',
+                  fontSize: '8px',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -155,7 +152,7 @@ export default function SquadExportCard({ exportRef, squadNum, slots, progress, 
                 <strong style={{ color: gColor }}>
                   {g.rarity === 'None'
                     ? '-'
-                    : `${g.rarity} Lv.${g.level}${g.stars > 0 ? ` ${g.stars}★` : ''}`}
+                    : `${g.rarity} ${g.level}${g.stars > 0 ? ` ${g.stars}★` : ''}`}
                 </strong>
               </div>
             );
@@ -170,55 +167,75 @@ export default function SquadExportCard({ exportRef, squadNum, slots, progress, 
       <div
         ref={exportRef}
         style={{
-          width: '720px',
+          width: '760px',
           backgroundColor: '#0f172a',
           color: '#f8fafc',
           padding: '20px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           border: '2px solid #eab308',
           borderRadius: '14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '18px',
         }}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '12px', marginBottom: '14px' }}>
+        {/* Main Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/Logo.png" alt="Logo" style={{ height: '38px', objectFit: 'contain' }} />
+            <img src="/Logo.png" alt="Logo" style={{ height: '40px', objectFit: 'contain' }} />
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '900', color: '#facc15' }}>
-                SQUAD {squadNum} FORMATION
+              <div style={{ fontSize: '19px', fontWeight: '900', color: '#facc15' }}>
+                ALL SQUADS OVERVIEW
               </div>
-              <div style={{ fontSize: '12px', color: '#4ade80', fontWeight: 'bold' }}>
-                {synergy.label}
+              <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                Heroes, Skills, Exclusive Weapons & Gear
               </div>
             </div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#facc15' }}>© Pīərbâ</div>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#facc15' }}>© Pīərbâ</div>
             <div style={{ fontSize: '10px', color: '#94a3b8' }}>{new Date().toLocaleDateString()}</div>
           </div>
         </div>
 
-        {/* Front Row */}
-        <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', textTransform: 'uppercase' }}>
-          Front Row
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-          {renderHeroBox(FRONT_KEYS.at(0), 'Front Left')}
-          {renderHeroBox(FRONT_KEYS.at(1), 'Front Right')}
-        </div>
+        {/* Loop through Squad 1, 2, 3 */}
+        {SQUAD_NUMS.map((sqNum) => {
+          const slots = squads[sqNum] || {};
+          const assignedIds = Object.values(slots).filter(Boolean);
+          const synergy = getSynergyFn(assignedIds);
 
-        {/* Back Row */}
-        <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', textTransform: 'uppercase' }}>
-          Back Row
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-          {renderHeroBox(BACK_KEYS.at(0), 'Back Left')}
-          {renderHeroBox(BACK_KEYS.at(1), 'Back Center')}
-          {renderHeroBox(BACK_KEYS.at(2), 'Back Right')}
-        </div>
+          return (
+            <div
+              key={sqNum}
+              style={{
+                backgroundColor: '#131c31',
+                border: '1px solid #334155',
+                borderRadius: '10px',
+                padding: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <strong style={{ fontSize: '15px', color: '#facc15' }}>SQUAD {sqNum}</strong>
+                <span style={{ fontSize: '11px', color: synergy.bonus > 0 ? '#4ade80' : '#94a3b8', fontWeight: 'bold' }}>
+                  {synergy.label}
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                {renderHeroBox(slots, FRONT_KEYS.at(0), 'Front Left')}
+                {renderHeroBox(slots, FRONT_KEYS.at(1), 'Front Right')}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                {renderHeroBox(slots, BACK_KEYS.at(0), 'Back Left')}
+                {renderHeroBox(slots, BACK_KEYS.at(1), 'Back Center')}
+                {renderHeroBox(slots, BACK_KEYS.at(2), 'Back Right')}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
-    }
-    
+}

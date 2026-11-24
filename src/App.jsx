@@ -218,7 +218,6 @@ export default function App() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-                      <header style={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
           <img
             src="/Logo.png"
@@ -237,8 +236,7 @@ export default function App() {
             © Pīərbâ
           </span>
         </div>
-                        
-        
+
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={handleCopyBackup} title="Copy Backup Text" style={styles.iconBtn}>
             <Copy size={17} />
@@ -314,6 +312,7 @@ export default function App() {
                 progress={progress[hero.id]}
                 onUpdate={updateHero}
                 onChangeTier={changeTier}
+                onRemoveFromSquad={handleRemoveHeroFromSquad}
               />
             ))}
           </div>
@@ -327,8 +326,6 @@ export default function App() {
           onAssignSlot={handleAssignSlot}
           onClearSlot={handleClearSlot}
           onResetSquad={handleResetSquad}
-          onRemoveFromSquad={handleRemoveHeroFromSquad}
-          
         />
       )}
 
@@ -336,6 +333,6 @@ export default function App() {
         <ResourcesView progress={progress} squads={squads} />
       )}
     </div>
-  </div>
- );
-}
+  );
+      }
+                      

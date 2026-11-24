@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Users, Shield, Copy } from 'lucide-react';
+import { Download, Upload, Users, Shield, Copy, Calculator } from 'lucide-react';
 import { INITIAL_HEROES, createDefaultProgress } from './data/heroesData';
 import HeroCard from './components/HeroCard';
 import SquadsView from './components/SquadsView';
+import ResourcesView from './components/ResourcesView';
 import { styles } from './styles';
 
 const STORAGE_KEY = 'last_war_heroes_progress_v1';
@@ -16,7 +17,7 @@ const DEFAULT_SQUADS = {
 };
 
 export default function App() {
-  const [activeView, setActiveView] = useState('heroes');
+  const [activeView, setActiveView] = useState('heroes'); // 'heroes' | 'squads' | 'resources'
   const fileInputRef = useRef(null);
 
   const [progress, setProgress] = useState(() => {
@@ -177,17 +178,17 @@ export default function App() {
 
   const navTabStyle = (active) => ({
     flex: 1,
-    padding: '10px',
+    padding: '9px 6px',
     borderRadius: '8px',
     border: active ? '1px solid #facc15' : '1px solid #334155',
     backgroundColor: active ? '#1e293b' : '#0f172a',
     color: active ? '#facc15' : '#94a3b8',
     fontWeight: 'bold',
-    fontSize: '13px',
+    fontSize: '12px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '6px',
+    gap: '5px',
     cursor: 'pointer',
   });
 
@@ -222,16 +223,19 @@ export default function App() {
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
         <button onClick={() => setActiveView('heroes')} style={navTabStyle(activeView === 'heroes')}>
-          <Shield size={16} /> Heroes ({INITIAL_HEROES.length})
+          <Shield size={15} /> Heroes
         </button>
         <button onClick={() => setActiveView('squads')} style={navTabStyle(activeView === 'squads')}>
-          <Users size={16} /> Squads (1–3)
+          <Users size={15} /> Squads
+        </button>
+        <button onClick={() => setActiveView('resources')} style={navTabStyle(activeView === 'resources')}>
+          <Calculator size={15} /> Resources
         </button>
       </div>
 
-      {activeView === 'heroes' ? (
+      {activeView === 'heroes' && (
         <>
           <input
             type="text"
@@ -274,7 +278,9 @@ export default function App() {
             ))}
           </div>
         </>
-      ) : (
+      )}
+
+      {activeView === 'squads' && (
         <SquadsView
           progress={progress}
           squads={squads}
@@ -282,7 +288,11 @@ export default function App() {
           onClearSlot={handleClearSlot}
         />
       )}
+
+      {activeView === 'resources' && (
+        <ResourcesView progress={progress} squads={squads} />
+      )}
     </div>
   );
-      }
-          
+  }
+    

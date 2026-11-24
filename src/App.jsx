@@ -220,7 +220,7 @@ export default function App() {
       <header style={styles.header}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="/logo.png"
+            src="/Logo.png"
             alt="Logo"
             style={{ maxHeight: '44px', maxWidth: '200px', objectFit: 'contain' }}
           />

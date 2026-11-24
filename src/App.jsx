@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Download, Upload, Users, Shield } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Download, Upload, Users, Shield, Copy } from 'lucide-react';
 import { INITIAL_HEROES, createDefaultProgress } from './data/heroesData';
 import HeroCard from './components/HeroCard';
 import SquadsView from './components/SquadsView';
@@ -17,6 +17,7 @@ const DEFAULT_SQUADS = {
 
 export default function App() {
   const [activeView, setActiveView] = useState('heroes');
+  const fileInputRef = useRef(null);
 
   const [progress, setProgress] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -116,18 +117,34 @@ export default function App() {
   };
 
   const handleExport = () => {
-    const backupPayload = { progress, squads };
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupPayload, null, 2));
-    const link = document.createElement('a');
-    link.setAttribute("href", dataStr);
-    link.setAttribute("download", `last-war-backup-${new Date().toISOString().slice(0, 10)}.json`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    try {
+      const backupPayload = JSON.stringify({ progress, squads }, null, 2);
+      const blob = new Blob([backupPayload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `last-war-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      alert('Export failed on this browser.');
+    }
+  };
+
+  const handleCopyBackup = async () => {
+    try {
+      const backupPayload = JSON.stringify({ progress, squads });
+      await navigator.clipboard.writeText(backupPayload);
+      alert('Backup copied to clipboard! Paste it in your Notes app to keep it safe.');
+    } catch (err) {
+      alert('Could not copy automatically. Use the Download button instead.');
+    }
   };
 
   const handleImport = (event) => {
-    const file = event.target.files.item(0);
+    const file = event.target.files?.item(0);
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -145,6 +162,7 @@ export default function App() {
       } catch (err) {
         alert('Invalid backup file.');
       }
+      event.target.value = '';
     };
     reader.readAsText(file);
   };
@@ -180,14 +198,27 @@ export default function App() {
           <h1 style={{ fontSize: '20px', margin: 0, color: '#facc15' }}>Last War Manager</h1>
           <span style={{ fontSize: '12px', color: '#94a3b8' }}>Heroes, Gear & Squads</span>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={handleExport} title="Export Backup" style={styles.iconBtn}>
-            <Download size={18} />
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button onClick={handleCopyBackup} title="Copy Backup Text" style={styles.iconBtn}>
+            <Copy size={17} />
           </button>
-          <label title="Import Backup" style={styles.iconBtn}>
-            <Upload size={18} />
-            <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
-          </label>
+          <button onClick={handleExport} title="Download Backup File" style={styles.iconBtn}>
+            <Download size={17} />
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title="Import Backup File"
+            style={styles.iconBtn}
+          >
+            <Upload size={17} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleImport}
+            style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+          />
         </div>
       </header>
 
@@ -253,5 +284,5 @@ export default function App() {
       )}
     </div>
   );
-  }
-                
+      }
+          

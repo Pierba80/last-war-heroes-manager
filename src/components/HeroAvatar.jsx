@@ -1,9 +1,16 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 import { resizeAvatarImage } from '../utils/imageUtils';
 
 export default function HeroAvatar({ hero, avatar, borderColor, size = 46, editable = true, onChangeAvatar }) {
   const fileInputRef = useRef(null);
+  const [imgError, setImgError] = useState(false);
+
+  const imageSource = avatar || `/heroes/${hero.id}.png`;
+
+  useEffect(() => {
+    setImgError(false);
+  }, [imageSource]);
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.item(0);
@@ -22,7 +29,7 @@ export default function HeroAvatar({ hero, avatar, borderColor, size = 46, edita
   return (
     <div
       onClick={() => editable && fileInputRef.current?.click()}
-      title={editable ? 'Tap to upload hero image' : hero.name}
+      title={editable ? 'Tap to upload custom image' : hero.name}
       style={{
         position: 'relative',
         width: `${size}px`,
@@ -39,10 +46,11 @@ export default function HeroAvatar({ hero, avatar, borderColor, size = 46, edita
         userSelect: 'none',
       }}
     >
-      {avatar ? (
+      {!imgError ? (
         <img
-          src={avatar}
+          src={imageSource}
           alt={hero.name}
+          onError={() => setImgError(true)}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (

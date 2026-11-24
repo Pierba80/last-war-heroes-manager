@@ -89,7 +89,8 @@ export default function SquadExportCard({ exportRef, squads, progress, getSynerg
               color: '#94a3b8',
               fontSize: '13px',
             }}
-           <img
+          >
+            <img
               src={p.avatar || `/heroes/${hero.id}.png`}
               alt={hero.name}
               onError={(e) => {
@@ -97,7 +98,7 @@ export default function SquadExportCard({ exportRef, squads, progress, getSynerg
               }}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
-
+          </div>
 
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: '8px', color: '#94a3b8', textTransform: 'uppercase' }}>{positionLabel}</div>
@@ -109,8 +110,7 @@ export default function SquadExportCard({ exportRef, squads, progress, getSynerg
             </div>
           </div>
         </div>
-
-        {(p.exclusiveWeaponLevel > 0 || p.awakeningStars > 0) && (
+                             {(p.exclusiveWeaponLevel > 0 || p.awakeningStars > 0) && (
           <div style={{ backgroundColor: '#0f172a', padding: '3px 5px', borderRadius: '5px', fontSize: '9px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '3px' }}>
             {p.exclusiveWeaponLevel > 0 && (
               <span style={{ color: '#fb923c', fontWeight: 'bold' }}>
@@ -181,7 +181,6 @@ export default function SquadExportCard({ exportRef, squads, progress, getSynerg
           gap: '18px',
         }}
       >
-        {/* Main Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src="/Logo.png" alt="Logo" style={{ height: '40px', objectFit: 'contain' }} />
@@ -201,7 +200,6 @@ export default function SquadExportCard({ exportRef, squads, progress, getSynerg
           </div>
         </div>
 
-        {/* Loop through Squad 1, 2, 3 */}
         {SQUAD_NUMS.map((sqNum) => {
           const slots = squads[sqNum] || {};
           const assignedIds = Object.values(slots).filter(Boolean);
@@ -240,4 +238,4 @@ export default function SquadExportCard({ exportRef, squads, progress, getSynerg
       </div>
     </div>
   );
-}
+            }

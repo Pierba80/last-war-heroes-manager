@@ -58,12 +58,18 @@ export const createDefaultProgress = () => {
       level: 1,
       stars: 0,
       tiers: 0,
-      skills: Array(3).fill(1),
+      skills: [1, 1, 1],
       exclusiveWeaponLevel: 0,
+      awakeningStars: 0,
+      awakeningSkill: 1,
       squad: null,
     };
   });
   return progress;
+};
+
+export const getMaxSkillLevel = (exclusiveWeaponLevel = 0) => {
+  return 30 + Math.floor(exclusiveWeaponLevel / 3);
 };
 
 export const calculateShardsNeeded = (stars, tiers, isPromotedUR) => {
@@ -79,4 +85,4 @@ export const calculateShardsNeeded = (stars, tiers, isPromotedUR) => {
   }
   return { nextStar, maxStars };
 };
-   
+    

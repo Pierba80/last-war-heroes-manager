@@ -336,5 +336,6 @@ export default function App() {
         <ResourcesView progress={progress} squads={squads} />
       )}
     </div>
-  );
-              }
+  </div>
+ );
+}

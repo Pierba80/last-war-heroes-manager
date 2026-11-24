@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, Users, Shield } from 'lucide-react';
 import { INITIAL_HEROES, createDefaultProgress } from './data/heroesData';
 import HeroCard from './components/HeroCard';
+import SquadsView from './components/SquadsView';
 import { styles } from './styles';
 
 const STORAGE_KEY = 'last_war_heroes_progress_v1';
+const SQUADS_STORAGE_KEY = 'last_war_squads_v1';
+
+const DEFAULT_SQUADS = {
+  1: { front1: null, front2: null, back1: null, back2: null, back3: null },
+  2: { front1: null, front2: null, back1: null, back2: null, back3: null },
+  3: { front1: null, front2: null, back1: null, back2: null, back3: null },
+};
 
 export default function App() {
+  const [activeView, setActiveView] = useState('heroes'); // 'heroes' | 'squads'
+
   const [progress, setProgress] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -19,6 +29,18 @@ export default function App() {
     return createDefaultProgress();
   });
 
+  const [squads, setSquads] = useState(() => {
+    const saved = localStorage.getItem(SQUADS_STORAGE_KEY);
+    if (saved) {
+      try {
+        return { ...DEFAULT_SQUADS, ...JSON.parse(saved) };
+      } catch (e) {
+        return DEFAULT_SQUADS;
+      }
+    }
+    return DEFAULT_SQUADS;
+  });
+
   const [filterType, setFilterType] = useState('All');
   const [filterSquad, setFilterSquad] = useState('All');
   const [search, setSearch] = useState('');
@@ -26,6 +48,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
   }, [progress]);
+
+  useEffect(() => {
+    localStorage.setItem(SQUADS_STORAGE_KEY, JSON.stringify(squads));
+  }, [squads]);
 
   const updateHero = (id, changes) => {
     setProgress((prev) => ({
@@ -45,8 +71,63 @@ export default function App() {
     });
   };
 
+  // Sync squad assignments between SquadsView and HeroCard badges
+  const syncHeroSquadBadges = (nextSquads) => {
+    setProgress((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach((id) => {
+        updated[id] = { ...updated[id], squad: null };
+      });
+      [1, 2, 3].forEach((sqNum) => {
+        const slots = nextSquads[sqNum] || {};
+        Object.values(slots).forEach((heroId) => {
+          if (heroId && updated[heroId]) {
+            updated[heroId] = { ...updated[heroId], squad: sqNum };
+          }
+        });
+      });
+      return updated;
+    });
+  };
+
+  const handleAssignSlot = (squadNum, slotKey, heroId) => {
+    setSquads((prev) => {
+      const next = {
+        1: { ...prev[1] },
+        2: { ...prev[2] },
+        3: { ...prev[3] },
+      };
+      // Remove hero if already placed in another slot/squad
+      [1, 2, 3].forEach((num) => {
+        Object.keys(next[num]).forEach((k) => {
+          if (next[num][k] === heroId) {
+            next[num][k] = null;
+          }
+        });
+      });
+      next[squadNum][slotKey] = heroId;
+      syncHeroSquadBadges(next);
+      return next;
+    });
+  };
+
+  const handleClearSlot = (squadNum, slotKey) => {
+    setSquads((prev) => {
+      const next = {
+        ...prev,
+        [squadNum]: {
+          ...prev[squadNum],
+          [slotKey]: null,
+        },
+      };
+      syncHeroSquadBadges(next);
+      return next;
+    });
+  };
+
   const handleExport = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(progress, null, 2));
+    const backupPayload = { progress, squads };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupPayload, null, 2));
     const link = document.createElement('a');
     link.setAttribute("href", dataStr);
     link.setAttribute("download", `last-war-backup-${new Date().toISOString().slice(0, 10)}.json`);
@@ -62,7 +143,15 @@ export default function App() {
     reader.onload = (e) => {
       try {
         const imported = JSON.parse(e.target.result);
-        setProgress({ ...createDefaultProgress(), ...imported });
+        if (imported.progress) {
+          setProgress({ ...createDefaultProgress(), ...imported.progress });
+          if (imported.squads) {
+            setSquads({ ...DEFAULT_SQUADS, ...imported.squads });
+          }
+        } else {
+          // Support older backups containing only hero progress
+          setProgress({ ...createDefaultProgress(), ...imported });
+        }
         alert('Backup imported successfully!');
       } catch (err) {
         alert('Invalid backup file.');
@@ -79,12 +168,28 @@ export default function App() {
     return true;
   });
 
+  const navTabStyle = (active) => ({
+    flex: 1,
+    padding: '10px',
+    borderRadius: '8px',
+    border: active ? '1px solid #facc15' : '1px solid #334155',
+    backgroundColor: active ? '#1e293b' : '#0f172a',
+    color: active ? '#facc15' : '#94a3b8',
+    fontWeight: 'bold',
+    fontSize: '13px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    cursor: 'pointer',
+  });
+
   return (
     <div style={styles.container}>
       <header style={styles.header}>
         <div>
           <h1 style={{ fontSize: '20px', margin: 0, color: '#facc15' }}>Last War Manager</h1>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>Heroes & Shards Tracker</span>
+          <span style={{ fontSize: '12px', color: '#94a3b8' }}>Heroes, Gear & Squads</span>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleExport} title="Export Backup" style={styles.iconBtn}>
@@ -97,46 +202,68 @@ export default function App() {
         </div>
       </header>
 
-      <input
-        type="text"
-        placeholder="Search hero (e.g. Kimberly, Murphy...)"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={styles.searchInput}
-      />
-
-      <div style={styles.filterRow}>
-        {['All', 'Tank', 'Aircraft', 'Missile'].map((type) => (
-          <button key={type} onClick={() => setFilterType(type)} style={styles.filterBtn(filterType === type)}>
-            {type}
-          </button>
-        ))}
+      {/* Main Navigation Tabs */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <button onClick={() => setActiveView('heroes')} style={navTabStyle(activeView === 'heroes')}>
+          <Shield size={16} /> Heroes ({INITIAL_HEROES.length})
+        </button>
+        <button onClick={() => setActiveView('squads')} style={navTabStyle(activeView === 'squads')}>
+          <Users size={16} /> Squads (1–3)
+        </button>
       </div>
 
-      <div style={{ ...styles.filterRow, marginBottom: '16px' }}>
-        {[
-          { label: 'All', val: 'All' },
-          { label: 'Squad 1', val: '1' },
-          { label: 'Squad 2', val: '2' },
-          { label: 'Squad 3', val: '3' },
-        ].map((sq) => (
-          <button key={sq.val} onClick={() => setFilterSquad(sq.val)} style={styles.filterBtn(filterSquad === sq.val)}>
-            {sq.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {filteredHeroes.map((hero) => (
-          <HeroCard
-            key={hero.id}
-            hero={hero}
-            progress={progress[hero.id]}
-            onUpdate={updateHero}
-            onChangeTier={changeTier}
+      {activeView === 'heroes' ? (
+        <>
+          <input
+            type="text"
+            placeholder="Search hero (e.g. Kimberly, Murphy...)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={styles.searchInput}
           />
-        ))}
-      </div>
+
+          <div style={styles.filterRow}>
+            {['All', 'Tank', 'Aircraft', 'Missile'].map((type) => (
+              <button key={type} onClick={() => setFilterType(type)} style={styles.filterBtn(filterType === type)}>
+                {type}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ ...styles.filterRow, marginBottom: '16px' }}>
+            {[
+              { label: 'All', val: 'All' },
+              { label: 'Squad 1', val: '1' },
+              { label: 'Squad 2', val: '2' },
+              { label: 'Squad 3', val: '3' },
+            ].map((sq) => (
+              <button key={sq.val} onClick={() => setFilterSquad(sq.val)} style={styles.filterBtn(filterSquad === sq.val)}>
+                {sq.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {filteredHeroes.map((hero) => (
+              <HeroCard
+                key={hero.id}
+                hero={hero}
+                progress={progress[hero.id]}
+                onUpdate={updateHero}
+                onChangeTier={changeTier}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <SquadsView
+          progress={progress}
+          squads={squads}
+          onAssignSlot={handleAssignSlot}
+          onClearSlot={handleClearSlot}
+        />
+      )}
     </div>
   );
-      }
+          }
+        

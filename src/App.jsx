@@ -17,7 +17,7 @@ const DEFAULT_SQUADS = {
 };
 
 export default function App() {
-  const [activeView, setActiveView] = useState('heroes'); // 'heroes' | 'squads' | 'resources'
+  const [activeView, setActiveView] = useState('heroes');
   const fileInputRef = useRef(null);
 
   const [progress, setProgress] = useState(() => {
@@ -112,6 +112,15 @@ export default function App() {
     setSquads((prev) => {
       const next = JSON.parse(JSON.stringify(prev));
       next[squadNum][slotKey] = null;
+      syncHeroSquadBadges(next);
+      return next;
+    });
+  };
+
+  const handleResetSquad = (squadNum) => {
+    setSquads((prev) => {
+      const next = JSON.parse(JSON.stringify(prev));
+      next[squadNum] = { front1: null, front2: null, back1: null, back2: null, back3: null };
       syncHeroSquadBadges(next);
       return next;
     });
@@ -286,13 +295,9 @@ export default function App() {
           squads={squads}
           onAssignSlot={handleAssignSlot}
           onClearSlot={handleClearSlot}
+          onResetSquad={handleResetSquad}
         />
       )}
 
       {activeView === 'resources' && (
-        <ResourcesView progress={progress} squads={squads} />
-      )}
-    </div>
-  );
-  }
-    
+        

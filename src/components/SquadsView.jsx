@@ -97,7 +97,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `last-war-squad-${selectedSquad}-${new Date().toISOString().slice(0, 10)}.png`;
+        link.download = `last-war-all-squads-${new Date().toISOString().slice(0, 10)}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -109,7 +109,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
       setIsExporting(false);
     }
   };
-  const getRarityBorder = (hero) => {
+      const getRarityBorder = (hero) => {
     const p = progress[hero.id] || {};
     const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
     if (effectiveRarity === 'UR') return '#eab308';
@@ -254,48 +254,26 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         </div>
 
         {assignedIds.length > 0 && (
-          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-            <button
-              onClick={handleExportPng}
-              disabled={isExporting}
-              title="Export Squad as PNG Image"
-              style={{
-                backgroundColor: '#1d4ed8',
-                border: '1px solid #3b82f6',
-                color: '#dbeafe',
-                borderRadius: '6px',
-                padding: '6px 8px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              <ImageIcon size={12} /> {isExporting ? '...' : 'PNG'}
-            </button>
-
-            <button
-              onClick={handleResetCurrentSquad}
-              title="Clear all heroes from this squad"
-              style={{
-                backgroundColor: '#7f1d1d',
-                border: '1px solid #ef4444',
-                color: '#fca5a5',
-                borderRadius: '6px',
-                padding: '6px 8px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              <RotateCcw size={12} /> Reset
-            </button>
-          </div>
+          <button
+            onClick={handleResetCurrentSquad}
+            title="Clear all heroes from this squad"
+            style={{
+              backgroundColor: '#7f1d1d',
+              border: '1px solid #ef4444',
+              color: '#fca5a5',
+              borderRadius: '6px',
+              padding: '6px 8px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <RotateCcw size={12} /> Reset
+          </button>
         )}
       </div>
 
@@ -308,7 +286,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         </div>
       </div>
 
-      <div>
+      <div style={{ marginBottom: '16px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Users size={14} /> Back Row (Attack / Support)
         </div>
@@ -317,13 +295,36 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         </div>
       </div>
 
-            <SquadExportCard
+      <button
+        onClick={handleExportPng}
+        disabled={isExporting}
+        style={{
+          width: '100%',
+          padding: '12px',
+          borderRadius: '10px',
+          backgroundColor: '#1d4ed8',
+          border: '1px solid #3b82f6',
+          color: '#ffffff',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          cursor: 'pointer',
+        }}
+      >
+        <ImageIcon size={18} />
+        {isExporting ? 'Generating Image...' : 'Export All Squads (1–3) as PNG'}
+      </button>
+
+      <SquadExportCard
         exportRef={exportRef}
         squads={squads}
         progress={progress}
         getSynergyFn={getSquadSynergy}
       />
-      
+
       {pickingSlot && (
         <HeroPickerModal
           selectedSquad={selectedSquad}
@@ -338,4 +339,5 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
       )}
     </div>
   );
-                     }
+        }
+                         

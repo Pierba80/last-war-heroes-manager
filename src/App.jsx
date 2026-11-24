@@ -92,11 +92,7 @@ export default function App() {
 
   const handleAssignSlot = (squadNum, slotKey, heroId) => {
     setSquads((prev) => {
-      const next = {
-        1: { ...prev.1 },
-        2: { ...prev.2 },
-        3: { ...prev.3 },
-      };
+      const next = JSON.parse(JSON.stringify(prev));
       SQUAD_NUMBERS.forEach((num) => {
         Object.keys(next[num]).forEach((k) => {
           if (next[num][k] === heroId) {
@@ -112,13 +108,8 @@ export default function App() {
 
   const handleClearSlot = (squadNum, slotKey) => {
     setSquads((prev) => {
-      const next = {
-        ...prev,
-        [squadNum]: {
-          ...prev[squadNum],
-          [slotKey]: null,
-        },
-      };
+      const next = JSON.parse(JSON.stringify(prev));
+      next[squadNum][slotKey] = null;
       syncHeroSquadBadges(next);
       return next;
     });
@@ -262,4 +253,5 @@ export default function App() {
       )}
     </div>
   );
-}
+  }
+                

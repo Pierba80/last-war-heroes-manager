@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, Sword, Wrench, RotateCcw } from 'lucide-react';
+import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, Sword, Wrench, RotateCcw, X } from 'lucide-react';
 import { calculateShardsNeeded } from '../data/heroesData';
 import HeroSkillsSection from './HeroSkillsSection';
 import HeroGearSection from './HeroGearSection';
@@ -8,7 +8,7 @@ import { styles } from '../styles';
 
 const STAR_NUMBERS = Array.from({ length: 5 }, (_, i) => i + 1);
 
-export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
+export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRemoveFromSquad }) {
   const [activeTab, setActiveTab] = useState('none');
   const shards = calculateShardsNeeded(progress.stars, progress.tiers, progress.isPromotedUR);
 
@@ -102,9 +102,26 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           {progress.squad && (
-            <span style={{ fontSize: '11px', padding: '3px 7px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#facc15', fontWeight: 'bold', marginRight: '2px' }}>
-              Squad {progress.squad}
-            </span>
+            <button
+              onClick={() => onRemoveFromSquad(hero.id)}
+              title="Remove from Squad"
+              style={{
+                fontSize: '11px',
+                padding: '3px 7px',
+                borderRadius: '6px',
+                backgroundColor: '#0f172a',
+                border: '1px solid #facc15',
+                color: '#facc15',
+                fontWeight: 'bold',
+                marginRight: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Squad {progress.squad} <X size={11} />
+            </button>
           )}
 
           <button

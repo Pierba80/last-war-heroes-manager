@@ -4,14 +4,14 @@ import { getMaxSkillLevel } from '../data/heroesData';
 import { styles } from '../styles';
 
 const SKILL_NAMES = ['Auto Attack', 'Tactic', 'Passive'];
-const STAR_LIST =;
+const STAR_LIST = Array.from({ length: 5 }, (_, i) => i + 1);
 
 export default function HeroSkillsSection({ hero, progress, onUpdate }) {
   const ewLevel = progress.exclusiveWeaponLevel || 0;
   const maxSkillLvl = getMaxSkillLevel(ewLevel);
   const skills = Array.isArray(progress.skills) && progress.skills.length === 3
     ? progress.skills
-    :;
+    : Array(3).fill(1);
 
   const awakeningStars = progress.awakeningStars || 0;
   const awakeningSkill = progress.awakeningSkill || 1;
@@ -173,5 +173,5 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
       )}
     </div>
   );
-  }
-                                                   
+      }
+      

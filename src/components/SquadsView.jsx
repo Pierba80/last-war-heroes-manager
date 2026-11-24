@@ -5,7 +5,8 @@ import HeroAvatar from './HeroAvatar';
 import HeroPickerModal from './HeroPickerModal';
 import { styles } from '../styles';
 
-const SQUAD_TABS =;
+const SQUAD_TABS = Array.from({ length: 3 }, (_, i) => i + 1);
+
 
 const SLOTS = [
   { key: 'front1', label: 'Front Left', row: 'front' },

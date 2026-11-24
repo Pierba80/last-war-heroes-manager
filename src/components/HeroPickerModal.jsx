@@ -19,7 +19,7 @@ export default function HeroPickerModal({ selectedSquad, progress, squads, onSel
   };
 
   const findHeroSquad = (heroId) => {
-    const squadNumbers =;
+      const squadNumbers = Array.from({ length: 3 }, (_, i) => i + 1);
     for (let i = 0; i < squadNumbers.length; i++) {
       const num = squadNumbers[i];
       const sq = squads[num] || {};

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Shield, Plane, Rocket, Users, X, Sparkles, RotateCcw } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Shield, Plane, Rocket, Users, X, Sparkles, RotateCcw, Image as ImageIcon } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { INITIAL_HEROES } from '../data/heroesData';
 import HeroAvatar from './HeroAvatar';
 import HeroPickerModal from './HeroPickerModal';
+import SquadExportCard from './SquadExportCard';
 import { styles } from '../styles';
 
 const SQUAD_TABS = Array.from({ length: 3 }, (_, i) => i + 1);
@@ -29,9 +31,10 @@ const getSquadSynergy = (heroIds) => {
     counts[h.type] = (counts[h.type] || 0) + 1;
   });
 
-  const sorted = Object.entries(counts).sort((a, b) => b - a);
-  const [topType, topCount] = sorted;
-  const [, secondCount] = sorted;
+  const sorted = Object.entries(counts).sort((a, b) => b.at(1) - a.at(1));
+  const topType = sorted.at(0).at(0);
+  const topCount = sorted.at(0).at(1);
+  const secondCount = sorted.at(1).at(1);
 
   let bonus = 0;
   let label = 'No Type Synergy (<3 same type)';
@@ -66,6 +69,8 @@ const getSquadSynergy = (heroIds) => {
 export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot, onResetSquad }) {
   const [selectedSquad, setSelectedSquad] = useState(1);
   const [pickingSlot, setPickingSlot] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const exportRef = useRef(null);
 
   const currentSquadSlots = squads[selectedSquad] || {};
   const assignedIds = Object.values(currentSquadSlots).filter(Boolean);
@@ -78,6 +83,32 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
     }
   };
 
+  const handleExportPng = async () => {
+    if (!exportRef.current || isExporting) return;
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(exportRef.current, {
+        backgroundColor: '#0f172a',
+        scale: 2,
+        useCORS: true,
+      });
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `last-war-squad-${selectedSquad}-${new Date().toISOString().slice(0, 10)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/png');
+    } catch (err) {
+      alert('Could not generate PNG image.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
   const getRarityBorder = (hero) => {
     const p = progress[hero.id] || {};
     const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
@@ -175,7 +206,6 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
 
   return (
     <div>
-      {/* Squad Selector Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
         {SQUAD_TABS.map((num) => (
           <button
@@ -196,7 +226,6 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         ))}
       </div>
 
-      {/* Synergy Banner + Reset Squad Button */}
       <div
         style={{
           backgroundColor: '#1e293b',
@@ -210,7 +239,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
           gap: '8px',
         }}
       >
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
             <Sparkles size={15} color={synergy.bonus > 0 ? '#facc15' : '#64748b'} />
             <strong style={{ fontSize: '13px', color: synergy.bonus > 0 ? '#facc15' : '#cbd5e1' }}>
@@ -225,30 +254,51 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         </div>
 
         {assignedIds.length > 0 && (
-          <button
-            onClick={handleResetCurrentSquad}
-            title="Clear all heroes from this squad"
-            style={{
-              backgroundColor: '#7f1d1d',
-              border: '1px solid #ef4444',
-              color: '#fca5a5',
-              borderRadius: '6px',
-              padding: '6px 8px',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <RotateCcw size={12} /> Reset
-          </button>
+          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+            <button
+              onClick={handleExportPng}
+              disabled={isExporting}
+              title="Export Squad as PNG Image"
+              style={{
+                backgroundColor: '#1d4ed8',
+                border: '1px solid #3b82f6',
+                color: '#dbeafe',
+                borderRadius: '6px',
+                padding: '6px 8px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              <ImageIcon size={12} /> {isExporting ? '...' : 'PNG'}
+            </button>
+
+            <button
+              onClick={handleResetCurrentSquad}
+              title="Clear all heroes from this squad"
+              style={{
+                backgroundColor: '#7f1d1d',
+                border: '1px solid #ef4444',
+                color: '#fca5a5',
+                borderRadius: '6px',
+                padding: '6px 8px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              <RotateCcw size={12} /> Reset
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Front Row (2 Slots) */}
       <div style={{ marginBottom: '12px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Users size={14} /> Front Row (Defense / Tank)
@@ -258,7 +308,6 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         </div>
       </div>
 
-      {/* Back Row (3 Slots) */}
       <div>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Users size={14} /> Back Row (Attack / Support)
@@ -268,7 +317,14 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         </div>
       </div>
 
-      {/* Hero Picker Modal */}
+      <SquadExportCard
+        exportRef={exportRef}
+        squadNum={selectedSquad}
+        slots={currentSquadSlots}
+        progress={progress}
+        synergy={synergy}
+      />
+
       {pickingSlot && (
         <HeroPickerModal
           selectedSquad={selectedSquad}
@@ -283,5 +339,4 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
       )}
     </div>
   );
-      }
-        
+                     }

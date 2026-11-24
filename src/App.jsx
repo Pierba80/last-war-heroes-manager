@@ -125,6 +125,21 @@ export default function App() {
       return next;
     });
   };
+    const handleRemoveHeroFromSquad = (heroId) => {
+    setSquads((prev) => {
+      const next = JSON.parse(JSON.stringify(prev));
+      SQUAD_NUMBERS.forEach((num) => {
+        Object.keys(next[num]).forEach((k) => {
+          if (next[num][k] === heroId) {
+            next[num][k] = null;
+          }
+        });
+      });
+      syncHeroSquadBadges(next);
+      return next;
+    });
+  };
+
                   const handleExport = () => {
     try {
       const backupPayload = JSON.stringify({ progress, squads }, null, 2);
@@ -295,6 +310,8 @@ export default function App() {
           onAssignSlot={handleAssignSlot}
           onClearSlot={handleClearSlot}
           onResetSquad={handleResetSquad}
+          onRemoveFromSquad={handleRemoveHeroFromSquad}
+          
         />
       )}
 

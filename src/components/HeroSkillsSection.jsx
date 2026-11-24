@@ -4,6 +4,7 @@ import { getMaxSkillLevel } from '../data/heroesData';
 import { styles } from '../styles';
 
 const SKILL_NAMES = ['Auto Attack', 'Tactic', 'Passive'];
+const STAR_LIST =;
 
 export default function HeroSkillsSection({ hero, progress, onUpdate }) {
   const ewLevel = progress.exclusiveWeaponLevel || 0;
@@ -126,7 +127,7 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
                   -1
                 </button>
                 <div style={{ display: 'flex', gap: '2px', padding: '0 4px' }}>
-                  {[1, 2, 3, 4, 5].map((s) => (
+                  {STAR_LIST.map((s) => (
                     <Star
                       key={s}
                       size={13}
@@ -172,5 +173,5 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
       )}
     </div>
   );
-      }
-                     
+  }
+                                                   

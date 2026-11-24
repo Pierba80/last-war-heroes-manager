@@ -3,12 +3,13 @@ import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, Sword
 import { calculateShardsNeeded } from '../data/heroesData';
 import HeroSkillsSection from './HeroSkillsSection';
 import HeroGearSection from './HeroGearSection';
+import HeroAvatar from './HeroAvatar';
 import { styles } from '../styles';
 
 const STAR_NUMBERS = Array.from({ length: 5 }, (_, i) => i + 1);
 
 export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
-  const [activeTab, setActiveTab] = useState('none'); // 'none' | 'skills' | 'gear'
+  const [activeTab, setActiveTab] = useState('none');
   const shards = calculateShardsNeeded(progress.stars, progress.tiers, progress.isPromotedUR);
 
   const toggleTab = (tab) => {
@@ -16,9 +17,9 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
   };
 
   const getTypeIcon = (type) => {
-    if (type === 'Tank') return <Shield size={16} color="#4ade80" />;
-    if (type === 'Aircraft') return <Plane size={16} color="#38bdf8" />;
-    return <Rocket size={16} color="#f87171" />;
+    if (type === 'Tank') return <Shield size={15} color="#4ade80" />;
+    if (type === 'Aircraft') return <Plane size={15} color="#38bdf8" />;
+    return <Rocket size={15} color="#f87171" />;
   };
 
   const getRarityBorder = () => {
@@ -54,34 +55,36 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
         opacity: progress.unlocked ? 1 : 0.6,
       }}
     >
-      {/* Row 1: Name, Role, Squad, Unlock */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {getTypeIcon(hero.type)}
-          <strong style={{ fontSize: '16px' }}>{hero.name}</strong>
-          <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#334155', color: '#cbd5e1' }}>
-            {hero.role}
-          </span>
+      {/* Row 1: Avatar, Name, Role, Squad, Unlock */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+          <HeroAvatar
+            hero={hero}
+            avatar={progress.avatar}
+            borderColor={getRarityBorder()}
+            size={46}
+            editable={true}
+            onChangeAvatar={(imgData) => onUpdate(hero.id, { avatar: imgData })}
+          />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {getTypeIcon(hero.type)}
+              <strong style={{ fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {hero.name}
+              </strong>
+            </div>
+            <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#334155', color: '#cbd5e1', display: 'inline-block', marginTop: '3px' }}>
+              {hero.role}
+            </span>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <select
-            value={progress.squad || ''}
-            onChange={(e) => onUpdate(hero.id, { squad: e.target.value ? Number(e.target.value) : null })}
-            style={{
-              backgroundColor: '#0f172a',
-              color: '#f8fafc',
-              border: '1px solid #334155',
-              borderRadius: '6px',
-              padding: '4px 6px',
-              fontSize: '12px',
-            }}
-          >
-            <option value="">No Squad</option>
-            <option value="1">Squad 1</option>
-            <option value="2">Squad 2</option>
-            <option value="3">Squad 3</option>
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {progress.squad && (
+            <span style={{ fontSize: '11px', padding: '3px 7px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#facc15', fontWeight: 'bold' }}>
+              Squad {progress.squad}
+            </span>
+          )}
 
           <button
             onClick={() => onUpdate(hero.id, { unlocked: !progress.unlocked })}
@@ -198,5 +201,5 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
       )}
     </div>
   );
-  }
-      
+      }
+                                           

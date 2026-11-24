@@ -218,13 +218,26 @@ export default function App() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <header style={styles.header}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
           <img
             src="/Logo.png"
             alt="Logo"
-            style={{ maxHeight: '44px', maxWidth: '200px', objectFit: 'contain' }}
+            style={{ maxHeight: '40px', maxWidth: '145px', objectFit: 'contain' }}
           />
+          <span
+            style={{
+              fontSize: '12px',
+              fontWeight: 'bold',
+              color: '#facc15',
+              whiteSpace: 'nowrap',
+              letterSpacing: '0.3px',
+            }}
+          >
+            © Pīərbâ
+          </span>
         </div>
+                        
         
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={handleCopyBackup} title="Copy Backup Text" style={styles.iconBtn}>

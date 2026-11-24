@@ -317,14 +317,13 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         </div>
       </div>
 
-      <SquadExportCard
+            <SquadExportCard
         exportRef={exportRef}
-        squadNum={selectedSquad}
-        slots={currentSquadSlots}
+        squads={squads}
         progress={progress}
-        synergy={synergy}
+        getSynergyFn={getSquadSynergy}
       />
-
+      
       {pickingSlot && (
         <HeroPickerModal
           selectedSquad={selectedSquad}

@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
-import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, Sword, Wrench } from 'lucide-react';
 import { calculateShardsNeeded } from '../data/heroesData';
 import HeroSkillsSection from './HeroSkillsSection';
+import HeroGearSection from './HeroGearSection';
 import { styles } from '../styles';
 
+const STAR_NUMBERS = Array.from({ length: 5 }, (_, i) => i + 1);
+
 export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
-  const [showDetails, setShowDetails] = useState(true);
+  const [activeTab, setActiveTab] = useState('none'); // 'none' | 'skills' | 'gear'
   const shards = calculateShardsNeeded(progress.stars, progress.tiers, progress.isPromotedUR);
+
+  const toggleTab = (tab) => {
+    setActiveTab((prev) => (prev === tab ? 'none' : tab));
+  };
 
   const getTypeIcon = (type) => {
     if (type === 'Tank') return <Shield size={16} color="#4ade80" />;
@@ -20,6 +27,22 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
     if (effectiveRarity === 'SSR') return '#a855f7';
     return '#3b82f6';
   };
+
+  const tabBtnStyle = (isActive) => ({
+    flex: 1,
+    padding: '6px 8px',
+    backgroundColor: isActive ? '#334155' : 'transparent',
+    border: '1px solid #334155',
+    borderRadius: '6px',
+    color: isActive ? '#facc15' : '#94a3b8',
+    fontSize: '11px',
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '5px',
+    cursor: 'pointer',
+  });
 
   return (
     <div
@@ -126,7 +149,7 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
       <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '4px' }}>
-            {Array.from({ length: 5 }, (_, i) => i + 1).map((s) => (
+            {STAR_NUMBERS.map((s) => (
               <Star
                 key={s}
                 size={16}
@@ -156,36 +179,24 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier }) {
         </div>
       </div>
 
-      {/* Toggle Button & Skills/Weapon/Awakening Section */}
-      <button
-        onClick={() => setShowDetails(!showDetails)}
-        style={{
-          width: '100%',
-          marginTop: '8px',
-          padding: '6px',
-          backgroundColor: 'transparent',
-          border: '1px solid #334155',
-          borderRadius: '6px',
-          color: '#94a3b8',
-          fontSize: '11px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '4px',
-          cursor: 'pointer',
-        }}
-      >
-        {showDetails ? (
-          <>Hide Skills & Weapon <ChevronUp size={14} /></>
-        ) : (
-          <>Show Skills & Weapon <ChevronDown size={14} /></>
-        )}
-      </button>
+      {/* Toggle Tabs: Skills & Gear */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+        <button onClick={() => toggleTab('skills')} style={tabBtnStyle(activeTab === 'skills')}>
+          <Sword size={13} /> Skills & Weapon
+        </button>
+        <button onClick={() => toggleTab('gear')} style={tabBtnStyle(activeTab === 'gear')}>
+          <Wrench size={13} /> Gear (4 Slots)
+        </button>
+      </div>
 
-      {showDetails && (
+      {activeTab === 'skills' && (
         <HeroSkillsSection hero={hero} progress={progress} onUpdate={onUpdate} />
+      )}
+
+      {activeTab === 'gear' && (
+        <HeroGearSection hero={hero} progress={progress} onUpdate={onUpdate} />
       )}
     </div>
   );
-      }
-              
+  }
+      

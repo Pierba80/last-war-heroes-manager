@@ -3,9 +3,8 @@ import { Crown, Lock, Unlock, RotateCcw, Plus, Minus, Shield, Sparkles, BookOpen
 import {
   OVERLORD_SKILLS,
   OVERLORD_STATS,
-  BOND_ROMAN,
+  getBondInfo,
   getMaxOverlordSkillLevel,
-  getMaxTrainingByBond,
   createDefaultOverlord,
   calculateOverlordResources,
 } from '../data/overlordData';
@@ -14,13 +13,13 @@ import { styles } from '../styles';
 
 const SQUAD_OPTIONS = Array.from({ length: 4 }, (_, i) => i + 1);
 const TIER_STARS = Array.from({ length: 7 }, (_, i) => i + 1);
-const SUB_BARS = Array.from({ length: 10 }, (_, i) => i + 1);
 const SKILL_STAR_LIST = Array.from({ length: 6 }, (_, i) => i + 1);
 
 export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverlordSquad }) {
   const ov = { ...createDefaultOverlord(), ...(overlord || {}) };
   const res = calculateOverlordResources(ov);
-  const maxTrainCap = getMaxTrainingByBond(ov.bondRank || 1);
+  const bondInfo = getBondInfo(ov.bondRank || 1);
+  const maxTrainCap = bondInfo.maxTrain;
 
   const handleReset = () => {
     if (!window.confirm('Reset all Overlord stats, bond and skills?')) return;
@@ -34,20 +33,14 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     const parsed = Number(rawVal);
     const safe = Number.isNaN(parsed) ? 1 : parsed;
     const clamped = Math.max(1, Math.min(70, safe));
-    onUpdateOverlord({
-      level: clamped,
-      subLevel: clamped >= 70 ? 0 : ov.subLevel,
-    });
+    onUpdateOverlord({ level: clamped });
   };
 
-  const changeSubLevel = (delta) => {
-    if (ov.level >= 70 && delta > 0) return;
-    let totalSteps = (ov.level - 1) * 10 + (ov.subLevel || 0) + delta;
-    if (totalSteps < 0) totalSteps = 0;
-    if (totalSteps > 690) totalSteps = 690;
-    const newLevel = Math.floor(totalSteps / 10) + 1;
-    const newSub = newLevel >= 70 ? 0 : totalSteps % 10;
-    onUpdateOverlord({ level: newLevel, subLevel: newSub });
+  const updateBondProgress = (rawVal) => {
+    const parsed = Number(rawVal);
+    const safe = Number.isNaN(parsed) ? 0 : parsed;
+    const clamped = Math.max(0, Math.min(20, safe));
+    onUpdateOverlord({ bondProgress: clamped });
   };
 
   const updateTraining = (statKey, rawVal) => {
@@ -93,19 +86,18 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
   };
 
   const numInputStyle = {
-    width: '46px',
+    width: '48px',
     textAlign: 'center',
     backgroundColor: '#0f172a',
     border: '1px solid #475569',
     color: '#ffffff',
     borderRadius: '5px',
-    padding: '3px 0',
-    fontSize: '12px',
+    padding: '4px 0',
+    fontSize: '13px',
     fontWeight: 'bold',
   };
-          return (
+        return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {/* Header: Avatar, 7-Star Grade, Squad, Level & 10 Yellow Bars */}
       <div
         style={{
           backgroundColor: '#1e293b',
@@ -158,7 +150,6 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           </div>
         </div>
 
-        {/* Squad Assignment */}
         <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', marginBottom: '10px' }}>
           <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Shield size={13} color="#facc15" /> Assigned Squad:
@@ -175,94 +166,102 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           </div>
         </div>
 
-        {/* Main Level (1-70) & 10 Yellow Sub-Bars */}
-        <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>Level (1–70):</span>
-              <button type="button" onClick={() => updateMainLevel(ov.level - 1)} style={styles.smallBtn}>
-                <Minus size={12} />
-              </button>
-              <input
-                type="number"
-                min="1"
-                max="70"
-                value={ov.level}
-                onChange={(e) => updateMainLevel(e.target.value)}
-                style={numInputStyle}
-              />
-              <button type="button" onClick={() => updateMainLevel(ov.level + 1)} style={styles.smallBtn}>
-                <Plus size={12} />
-              </button>
+        <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#f8fafc' }}>
+              Overlord Level
             </div>
-
-            <div style={{ display: 'flex', gap: '5px' }}>
-              <button type="button" onClick={() => changeSubLevel(-1)} style={styles.smallBtn}>-1</button>
-              <button type="button" onClick={() => changeSubLevel(1)} style={{ ...styles.smallBtn, backgroundColor: '#dc2626' }}>+1</button>
+            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+              Range: 1 to 70 (Max Lv. 70)
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {SUB_BARS.map((bar) => {
-              const active = ov.level >= 70 || bar <= (ov.subLevel || 0);
-              return (
-                <div
-                  key={bar}
-                  onClick={() => {
-                    if (ov.level >= 70) return;
-                    const nextSub = ov.subLevel === bar ? bar - 1 : bar;
-                    onUpdateOverlord({ subLevel: nextSub });
-                  }}
-                  style={{
-                    flex: 1,
-                    height: '12px',
-                    borderRadius: '3px',
-                    backgroundColor: active ? '#facc15' : '#334155',
-                    cursor: 'pointer',
-                  }}
-                />
-              );
-            })}
-            <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '6px', fontWeight: 'bold', minWidth: '30px' }}>
-              {ov.level >= 70 ? 'MAX' : `${ov.subLevel || 0}/10`}
-            </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button type="button" onClick={() => updateMainLevel(ov.level - 1)} style={styles.smallBtn}>
+              <Minus size={14} />
+            </button>
+            <input
+              type="number"
+              min="1"
+              max="70"
+              value={ov.level}
+              onChange={(e) => updateMainLevel(e.target.value)}
+              style={numInputStyle}
+            />
+            <button type="button" onClick={() => updateMainLevel(ov.level + 1)} style={{ ...styles.smallBtn, backgroundColor: '#dc2626' }}>
+              <Plus size={14} />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Bond Rating & Specialized Training (ATK, DEF, PS) */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', border: '1px solid #ec4899' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#f472b6', fontSize: '12px', fontWeight: 'bold' }}>
-              <Heart size={14} fill="#f472b6" /> Bond Rating: {BOND_ROMAN.at((ov.bondRank || 1) - 1) || 'I'} ({ov.bondProgress || 0}/20)
+        <div
+          style={{
+            backgroundColor: '#0f172a',
+            padding: '10px',
+            borderRadius: '8px',
+            border: `1px solid ${bondInfo.color}`,
+            marginBottom: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: bondInfo.color, fontSize: '13px', fontWeight: 'bold' }}>
+                <Heart size={15} fill={bondInfo.color} /> Bond {bondInfo.roman} • {bondInfo.label}
+              </div>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                Unlocks Training up to Lv. {maxTrainCap}
+              </div>
             </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-              Unlocks Training up to Lv. {maxTrainCap}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <button
+                type="button"
+                onClick={() => onUpdateOverlord({ bondRank: Math.max(1, (ov.bondRank || 1) - 1) })}
+                style={styles.smallBtn}
+              >
+                -
+              </button>
+              <span style={{ fontSize: '14px', fontWeight: 'bold', color: bondInfo.color, minWidth: '28px', textAlign: 'center' }}>
+                {bondInfo.roman}
+              </span>
+              <button
+                type="button"
+                onClick={() => onUpdateOverlord({ bondRank: Math.min(10, (ov.bondRank || 1) + 1) })}
+                style={{ ...styles.smallBtn, backgroundColor: bondInfo.color, color: '#0f172a' }}
+              >
+                +
+              </button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <button
-              type="button"
-              onClick={() => onUpdateOverlord({ bondRank: Math.max(1, (ov.bondRank || 1) - 1) })}
-              style={styles.smallBtn}
-            >
-              -
-            </button>
-            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#f472b6', minWidth: '24px', textAlign: 'center' }}>
-              {BOND_ROMAN.at((ov.bondRank || 1) - 1) || 'I'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #1e293b', paddingTop: '6px' }}>
+            <span style={{ fontSize: '11px', color: '#cbd5e1' }}>
+              Promotion Stars: <strong style={{ color: bondInfo.color }}>{ov.bondProgress || 0} / 20</strong>
             </span>
-            <button
-              type="button"
-              onClick={() => onUpdateOverlord({ bondRank: Math.min(10, (ov.bondRank || 1) + 1) })}
-              style={{ ...styles.smallBtn, backgroundColor: '#db2777' }}
-            >
-              +
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button type="button" onClick={() => updateBondProgress((ov.bondProgress || 0) - 1)} style={{ ...styles.smallBtn, padding: '3px 6px' }}>
+                -1
+              </button>
+              <input
+                type="number"
+                min="0"
+                max="20"
+                value={ov.bondProgress || 0}
+                onChange={(e) => updateBondProgress(e.target.value)}
+                style={{ ...numInputStyle, width: '40px', padding: '2px 0', fontSize: '12px' }}
+              />
+              <button type="button" onClick={() => updateBondProgress((ov.bondProgress || 0) + 1)} style={{ ...styles.smallBtn, padding: '3px 6px' }}>
+                +1
+              </button>
+            </div>
           </div>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {OVERLORD_STATS.map((st) => {
             const val = (ov.training && ov.training[st.key]) || 1;
             return (
@@ -297,7 +296,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
                     max={maxTrainCap}
                     value={val}
                     onChange={(e) => updateTraining(st.key, e.target.value)}
-                    style={{ ...numInputStyle, width: '52px', fontSize: '13px' }}
+                    style={{ ...numInputStyle, width: '52px' }}
                   />
                   <button type="button" onClick={() => updateTraining(st.key, val + 1)} style={styles.smallBtn}>
                     <Plus size={12} />
@@ -308,7 +307,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           })}
         </div>
       </div>
-                      {/* All 5 Overlord Skills with Stars & Cap */}
+
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <strong style={{ fontSize: '13px', color: '#f8fafc' }}>Overlord Skills (5)</strong>
@@ -366,7 +365,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
                     max={maxSkillLvl}
                     value={val}
                     onChange={(e) => updateSkillLevel(sk.key, e.target.value)}
-                    style={{ ...numInputStyle, width: '40px' }}
+                    style={{ ...numInputStyle, width: '40px', fontSize: '12px' }}
                   />
                   <button type="button" onClick={() => updateSkillLevel(sk.key, val + 1)} style={{ ...styles.smallBtn, padding: '4px 6px' }}>
                     <Plus size={11} />
@@ -385,7 +384,6 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
         </div>
       </div>
 
-      {/* Remaining Resources to Max Overlord */}
       <div style={{ backgroundColor: '#1e293b', border: '1px solid #ef4444', borderRadius: '10px', padding: '12px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fca5a5', marginBottom: '8px' }}>
           Resources Needed to Max Overlord
@@ -422,4 +420,4 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       </div>
     </div>
   );
-      }
+            }

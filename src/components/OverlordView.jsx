@@ -3,6 +3,7 @@ import { Crown, Lock, Unlock, RotateCcw, Plus, Minus, Shield, Sparkles, BookOpen
 import {
   OVERLORD_SKILLS,
   OVERLORD_STATS,
+  SUB_ROMAN,
   getBondInfo,
   getMaxOverlordSkillLevel,
   createDefaultOverlord,
@@ -19,7 +20,11 @@ const SKILL_STAR_LIST = Array.from({ length: 6 }, (_, i) => i + 1);
 export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverlordSquad }) {
   const ov = { ...createDefaultOverlord(), ...(overlord || {}) };
   const res = calculateOverlordResources(ov);
-  const bondInfo = getBondInfo(ov.bondRank || 1);
+  const bondRank = Math.min(12, Math.max(1, ov.bondRank || 1));
+  const bondSub = Math.min(10, Math.max(0, ov.bondProgress || 0));
+  const bondSubRoman = bondSub === 0 ? '0' : SUB_ROMAN.at(bondSub - 1);
+  const bondTotalLvl = (bondRank - 1) * 10 + bondSub;
+  const bondInfo = getBondInfo(bondRank);
   const maxTrainCap = bondInfo.maxTrain;
 
   const currentLvl = Math.min(80, Math.max(0, ov.level ?? 1));
@@ -44,11 +49,24 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     });
   };
 
-  const updateBondProgress = (rawVal) => {
-    const parsed = Number(rawVal);
-    const safe = Number.isNaN(parsed) ? 0 : parsed;
-    const clamped = Math.max(0, Math.min(20, safe));
-    onUpdateOverlord({ bondProgress: clamped });
+  const updateBondRank = (newRank) => {
+    const clampedRank = Math.max(1, Math.min(12, newRank));
+    onUpdateOverlord({
+      bondRank: clampedRank,
+      bondProgress: clampedRank === 12 ? 10 : Math.min(10, bondSub),
+    });
+  };
+
+  const updateBondSub = (newSub) => {
+    const clamped = Math.max(0, Math.min(10, newSub));
+    if (clamped === 10 && bondRank < 12) {
+      onUpdateOverlord({
+        bondRank: bondRank + 1,
+        bondProgress: 0,
+      });
+    } else {
+      onUpdateOverlord({ bondProgress: clamped });
+    }
   };
 
   const updateTraining = (statKey, rawVal) => {
@@ -104,7 +122,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     fontSize: '13px',
     fontWeight: 'bold',
   };
-                          return (
+  return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -220,13 +238,14 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
         </div>
       </div>
 
+      {/* 12-Color Bond Rating (I-XII) + Roman Sub-Levels (I-X) = 120 Total */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div
           style={{
             backgroundColor: '#0f172a',
             padding: '10px',
             borderRadius: '8px',
-            border: `1px solid ${bondInfo.color}`,
+            border: `2px solid ${bondInfo.color}`,
             marginBottom: '10px',
             display: 'flex',
             flexDirection: 'column',
@@ -236,27 +255,23 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: bondInfo.color, fontSize: '13px', fontWeight: 'bold' }}>
-                <Heart size={15} fill={bondInfo.color} /> Bond {bondInfo.roman} • {bondInfo.label}
+                <Heart size={15} fill={bondInfo.color} /> Bond {bondInfo.roman}/XII • {bondInfo.label}
               </div>
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                Unlocks Training up to Lv. {maxTrainCap}
+                Total Lv. {bondTotalLvl}/120 • Training Max Lv. {maxTrainCap}
               </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <button
-                type="button"
-                onClick={() => onUpdateOverlord({ bondRank: Math.max(1, (ov.bondRank || 1) - 1) })}
-                style={styles.smallBtn}
-              >
+              <button type="button" onClick={() => updateBondRank(bondRank - 1)} style={styles.smallBtn}>
                 -
               </button>
-              <span style={{ fontSize: '14px', fontWeight: 'bold', color: bondInfo.color, minWidth: '28px', textAlign: 'center' }}>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', color: bondInfo.color, minWidth: '32px', textAlign: 'center' }}>
                 {bondInfo.roman}
               </span>
               <button
                 type="button"
-                onClick={() => onUpdateOverlord({ bondRank: Math.min(10, (ov.bondRank || 1) + 1) })}
+                onClick={() => updateBondRank(bondRank + 1)}
                 style={{ ...styles.smallBtn, backgroundColor: bondInfo.color, color: '#0f172a' }}
               >
                 +
@@ -266,27 +281,36 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #1e293b', paddingTop: '6px' }}>
             <span style={{ fontSize: '11px', color: '#cbd5e1' }}>
-              Promotion Stars: <strong style={{ color: bondInfo.color }}>{ov.bondProgress || 0} / 20</strong>
+              Sub-level: <strong style={{ color: bondInfo.color }}>{bondSubRoman} / X</strong>
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <button type="button" onClick={() => updateBondProgress((ov.bondProgress || 0) - 1)} style={{ ...styles.smallBtn, padding: '3px 6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <button type="button" onClick={() => updateBondSub(bondSub - 1)} style={{ ...styles.smallBtn, padding: '3px 7px' }}>
                 -1
               </button>
-              <input
-                type="number"
-                min="0"
-                max="20"
-                value={ov.bondProgress || 0}
-                onChange={(e) => updateBondProgress(e.target.value)}
-                style={{ ...numInputStyle, width: '40px', padding: '2px 0', fontSize: '12px' }}
-              />
-              <button type="button" onClick={() => updateBondProgress((ov.bondProgress || 0) + 1)} style={{ ...styles.smallBtn, padding: '3px 6px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', color: bondInfo.color, minWidth: '30px', textAlign: 'center' }}>
+                {bondSubRoman}
+              </span>
+              <button type="button" onClick={() => updateBondSub(bondSub + 1)} style={{ ...styles.smallBtn, padding: '3px 7px' }}>
                 +1
               </button>
             </div>
           </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', pointerEvents: 'none' }}>
+            {SUB_BARS.map((bar) => (
+              <div
+                key={bar}
+                style={{
+                  flex: 1,
+                  height: '6px',
+                  borderRadius: '2px',
+                  backgroundColor: bar <= bondSub ? bondInfo.color : '#334155',
+                }}
+              />
+            ))}
+          </div>
         </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {OVERLORD_STATS.map((st) => {
             const val = (ov.training && ov.training[st.key]) || 1;
             return (
@@ -445,4 +469,4 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       </div>
     </div>
   );
-                            }
+                }

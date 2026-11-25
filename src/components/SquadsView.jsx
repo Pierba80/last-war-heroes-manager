@@ -304,15 +304,16 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
               editable={false}
             />
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Crown size={13} color="#facc15" />
                 <strong style={{ fontSize: '13px', color: '#fca5a5' }}>
-                  Overlord • Lv.{overlord.level || 1}
+                  Overlord • G{overlord.tier || 1} Lv.{overlord.level || 1}
                 </strong>
               </div>
               <div style={{ fontSize: '10px', color: '#cbd5e1' }}>
-                Train: {overlord.training?.atk || 1}/{overlord.training?.hp || 1}/{overlord.training?.def || 1} • Skills: {overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.armor || 1}/{overlord.skills?.instinct || 1}
+                ATK/DEF/PS: {overlord.training?.atk || 1}/{overlord.training?.def || 1}/{overlord.training?.hp || 1} • Skills: {overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.brutal || 1}/{overlord.skills?.instinct || 1}/{overlord.skills?.command || 1}
               </div>
+          
             </div>
           </div>
 

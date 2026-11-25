@@ -1,4 +1,3 @@
-
 ﻿export const OVERLORD_SKILLS = [
   { key: 'strike', name: "Overlord's Strike", sub: '1st Skill (Active)' },
   { key: 'roar', name: 'Furious Roar', sub: '2nd Skill (Attack)' },
@@ -47,4 +46,81 @@ export const getMaxOverlordSkillLevel = (stars = 4) => {
   if (stars === 4) return 30;
   if (stars === 5) return 35;
   return 40;
+};
+﻿export const createDefaultOverlord = () => ({
+  unlocked: true,
+  avatar: null,
+  tier: 6,
+  level: 56,
+  bondRank: 5,
+  bondProgress: 8,
+  training: {
+    atk: 309,
+    def: 324,
+    hp: 339,
+  },
+  skills: {
+    strike: 34,
+    roar: 33,
+    brutal: 30,
+    instinct: 30,
+    command: 30,
+  },
+  skillStars: {
+    strike: 5,
+    roar: 5,
+    brutal: 4,
+    instinct: 4,
+    command: 4,
+  },
+  squad: null,
+});
+
+
+export const calculateOverlordResources = (ov) => {
+  const currentLvl = Math.min(80, Math.max(0, ov.level ?? 1));
+  const remainingLevels = Math.max(0, 80 - currentLvl);
+
+
+  const unlockShards = ov.unlocked ? 0 : 100;
+  const totalShards = unlockShards + remainingLevels * 200;
+
+
+  const tr = ov.training || { atk: 1, def: 1, hp: 1 };
+  let guidebooks = 0;
+  let certificates = 0;
+
+
+  ['atk', 'def', 'hp'].forEach((k) => {
+    const statLvl = Math.min(500, Math.max(1, tr[k] || 1));
+    for (let lvl = statLvl + 1; lvl <= 500; lvl++) {
+      guidebooks += Math.round(15 + lvl * 2.2);
+      if (lvl % 20 === 0) {
+        certificates += Math.floor(lvl / 20) * 10;
+      }
+    }
+  });
+
+
+  const sk = ov.skills || {};
+  const st = ov.skillStars || {};
+  let skillBadges = 0;
+
+
+  OVERLORD_SKILLS.forEach((s) => {
+    const val = Math.min(40, Math.max(1, sk[s.key] || 1));
+    const cap = getMaxOverlordSkillLevel(st[s.key] ?? 4);
+    const target = Math.max(val, cap);
+    for (let lvl = val + 1; lvl <= target; lvl++) {
+      skillBadges += Math.round(25 + Math.pow(lvl, 1.85) * 3);
+    }
+  });
+
+
+  return {
+    totalShards,
+    guidebooks,
+    certificates,
+    skillBadges,
+  };
 };

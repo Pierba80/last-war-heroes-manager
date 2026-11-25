@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Shield, Plane, Rocket, Users, X, Sparkles, RotateCcw, Image as ImageIcon } from 'lucide-react';
+import { Shield, Plane, Rocket, Users, X, Sparkles, RotateCcw, Image as ImageIcon, Crown } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { INITIAL_HEROES } from '../data/heroesData';
 import HeroAvatar from './HeroAvatar';
@@ -7,7 +7,7 @@ import HeroPickerModal from './HeroPickerModal';
 import SquadExportCard from './SquadExportCard';
 import { styles } from '../styles';
 
-const SQUAD_TABS = Array.from({ length: 3 }, (_, i) => i + 1);
+const SQUAD_TABS = Array.from({ length: 4 }, (_, i) => i + 1);
 
 const SLOTS = [
   { key: 'front1', label: 'Front Left', row: 'front' },
@@ -66,7 +66,7 @@ const getSquadSynergy = (heroIds) => {
   };
 };
 
-export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot, onResetSquad }) {
+export default function SquadsView({ progress, squads, overlord, onAssignSlot, onClearSlot, onResetSquad, onRemoveOverlord }) {
   const [selectedSquad, setSelectedSquad] = useState(1);
   const [pickingSlot, setPickingSlot] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -75,10 +75,11 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
   const currentSquadSlots = squads[selectedSquad] || {};
   const assignedIds = Object.values(currentSquadSlots).filter(Boolean);
   const synergy = getSquadSynergy(assignedIds);
+  const hasOverlord = overlord && overlord.squad === selectedSquad;
 
   const handleResetCurrentSquad = () => {
-    if (assignedIds.length === 0) return;
-    if (window.confirm(`Clear all 5 heroes from Squad ${selectedSquad}?`)) {
+    if (assignedIds.length === 0 && !hasOverlord) return;
+    if (window.confirm(`Clear all heroes from Squad ${selectedSquad}?`)) {
       onResetSquad(selectedSquad);
     }
   };
@@ -109,7 +110,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
       setIsExporting(false);
     }
   };
-      const getRarityBorder = (hero) => {
+    const getRarityBorder = (hero) => {
     const p = progress[hero.id] || {};
     const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
     if (effectiveRarity === 'UR') return '#eab308';
@@ -154,6 +155,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         {hero ? (
           <>
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onClearSlot(selectedSquad, slot.key);
@@ -206,10 +208,11 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
         {SQUAD_TABS.map((num) => (
           <button
             key={num}
+            type="button"
             onClick={() => {
               setSelectedSquad(num);
               setPickingSlot(null);
@@ -217,8 +220,9 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
             style={{
               ...styles.filterBtn(selectedSquad === num),
               flex: 1,
-              padding: '8px',
+              padding: '8px 4px',
               textAlign: 'center',
+              fontSize: '12px',
             }}
           >
             Squad {num}
@@ -232,7 +236,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
           border: `1px solid ${synergy.bonus > 0 ? '#eab308' : '#334155'}`,
           borderRadius: '10px',
           padding: '10px 12px',
-          marginBottom: '14px',
+          marginBottom: '12px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -253,10 +257,11 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
           )}
         </div>
 
-        {assignedIds.length > 0 && (
+        {(assignedIds.length > 0 || hasOverlord) && (
           <button
+            type="button"
             onClick={handleResetCurrentSquad}
-            title="Clear all heroes from this squad"
+            title="Clear squad"
             style={{
               backgroundColor: '#7f1d1d',
               border: '1px solid #ef4444',
@@ -277,6 +282,59 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         )}
       </div>
 
+      {hasOverlord && (
+        <div
+          style={{
+            backgroundColor: '#1e1b2e',
+            border: '1px solid #ef4444',
+            borderRadius: '10px',
+            padding: '8px 10px',
+            marginBottom: '12px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <HeroAvatar
+              hero={{ id: 'overlord', name: 'Overlord' }}
+              avatar={overlord.avatar}
+              borderColor="#ef4444"
+              size={36}
+              editable={false}
+            />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Crown size={13} color="#facc15" />
+                <strong style={{ fontSize: '13px', color: '#fca5a5' }}>
+                  Overlord • Lv.{overlord.level || 1}
+                </strong>
+              </div>
+              <div style={{ fontSize: '10px', color: '#cbd5e1' }}>
+                Train: {overlord.training?.atk || 1}/{overlord.training?.hp || 1}/{overlord.training?.def || 1} • Skills: {overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.armor || 1}/{overlord.skills?.instinct || 1}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onRemoveOverlord}
+            title="Remove Overlord from squad"
+            style={{
+              backgroundColor: '#0f172a',
+              border: '1px solid #475569',
+              borderRadius: '6px',
+              padding: '5px 8px',
+              color: '#94a3b8',
+              fontSize: '11px',
+              cursor: 'pointer',
+            }}
+          >
+            <X size={13} />
+          </button>
+        </div>
+      )}
+
       <div style={{ marginBottom: '12px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Users size={14} /> Front Row (Defense / Tank)
@@ -296,6 +354,7 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
       </div>
 
       <button
+        type="button"
         onClick={handleExportPng}
         disabled={isExporting}
         style={{
@@ -315,13 +374,14 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
         }}
       >
         <ImageIcon size={18} />
-        {isExporting ? 'Generating Image...' : 'Export All Squads (1–3) as PNG'}
+        {isExporting ? 'Generating Image...' : 'Export All Squads (1–4) as PNG'}
       </button>
 
       <SquadExportCard
         exportRef={exportRef}
         squads={squads}
         progress={progress}
+        overlord={overlord}
         getSynergyFn={getSquadSynergy}
       />
 
@@ -339,5 +399,4 @@ export default function SquadsView({ progress, squads, onAssignSlot, onClearSlot
       )}
     </div>
   );
-        }
-                         
+}

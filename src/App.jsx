@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Users, Shield, Copy, Calculator, Volume2, VolumeX } from 'lucide-react';
+import { Download, Upload, Users, Shield, Copy, Calculator, Volume2, VolumeX, Crown } from 'lucide-react';
 import { INITIAL_HEROES, createDefaultProgress } from './data/heroesData';
+import { createDefaultOverlord } from './data/overlordData';
 import HeroCard from './components/HeroCard';
 import SquadsView from './components/SquadsView';
 import ResourcesView from './components/ResourcesView';
+import OverlordView from './components/OverlordView';
 import { musicPlayer } from './utils/musicPlayer';
 import { styles } from './styles';
 
 const STORAGE_KEY = 'last_war_heroes_progress_v1';
 const SQUADS_STORAGE_KEY = 'last_war_squads_v1';
-const SQUAD_NUMBERS = Array.from({ length: 3 }, (_, i) => i + 1);
+const OVERLORD_STORAGE_KEY = 'last_war_overlord_v1';
+const SQUAD_NUMBERS = Array.from({ length: 4 }, (_, i) => i + 1);
 
 const DEFAULT_SQUADS = {
   1: { front1: null, front2: null, back1: null, back2: null, back3: null },
   2: { front1: null, front2: null, back1: null, back2: null, back3: null },
   3: { front1: null, front2: null, back1: null, back2: null, back3: null },
+  4: { front1: null, front2: null, back1: null, back2: null, back3: null },
 };
 
 export default function App() {
@@ -46,6 +50,18 @@ export default function App() {
     return DEFAULT_SQUADS;
   });
 
+  const [overlord, setOverlord] = useState(() => {
+    const saved = localStorage.getItem(OVERLORD_STORAGE_KEY);
+    if (saved) {
+      try {
+        return { ...createDefaultOverlord(), ...JSON.parse(saved) };
+      } catch (e) {
+        return createDefaultOverlord();
+      }
+    }
+    return createDefaultOverlord();
+  });
+
   const [filterType, setFilterType] = useState('All');
   const [filterSquad, setFilterSquad] = useState('All');
   const [search, setSearch] = useState('');
@@ -59,12 +75,15 @@ export default function App() {
   }, [squads]);
 
   useEffect(() => {
+    localStorage.setItem(OVERLORD_STORAGE_KEY, JSON.stringify(overlord));
+  }, [overlord]);
+
+  useEffect(() => {
     return () => {
       musicPlayer.stop();
     };
   }, []);
-
-  const handleToggleMusic = async () => {
+                              const handleToggleMusic = async () => {
     if (musicOn) {
       musicPlayer.stop();
       setMusicOn(false);
@@ -78,6 +97,20 @@ export default function App() {
     setProgress((prev) => ({
       ...prev,
       [id]: { ...prev[id], ...changes },
+    }));
+  };
+
+  const updateOverlord = (changes) => {
+    setOverlord((prev) => ({
+      ...prev,
+      ...changes,
+    }));
+  };
+
+  const handleAssignOverlordSquad = (squadNum) => {
+    setOverlord((prev) => ({
+      ...prev,
+      squad: squadNum,
     }));
   };
 
@@ -142,6 +175,9 @@ export default function App() {
       syncHeroSquadBadges(next);
       return next;
     });
+    if (overlord.squad === squadNum) {
+      updateOverlord({ squad: null });
+    }
   };
 
   const handleRemoveHeroFromSquad = (heroId) => {
@@ -158,9 +194,10 @@ export default function App() {
       return next;
     });
   };
+
   const handleExport = () => {
     try {
-      const backupPayload = JSON.stringify({ progress, squads }, null, 2);
+      const backupPayload = JSON.stringify({ progress, squads, overlord }, null, 2);
       const blob = new Blob([backupPayload], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -177,7 +214,7 @@ export default function App() {
 
   const handleCopyBackup = async () => {
     try {
-      const backupPayload = JSON.stringify({ progress, squads });
+      const backupPayload = JSON.stringify({ progress, squads, overlord });
       await navigator.clipboard.writeText(backupPayload);
       alert('Backup copied to clipboard! Paste it in your Notes app to keep it safe.');
     } catch (err) {
@@ -197,6 +234,9 @@ export default function App() {
           if (imported.squads) {
             setSquads({ ...DEFAULT_SQUADS, ...imported.squads });
           }
+          if (imported.overlord) {
+            setOverlord({ ...createDefaultOverlord(), ...imported.overlord });
+          }
         } else {
           setProgress({ ...createDefaultProgress(), ...imported });
         }
@@ -208,8 +248,7 @@ export default function App() {
     };
     reader.readAsText(file);
   };
-
-  const filteredHeroes = INITIAL_HEROES.filter((hero) => {
+        const filteredHeroes = INITIAL_HEROES.filter((hero) => {
     const p = progress[hero.id];
     if (filterType !== 'All' && hero.type !== filterType) return false;
     if (filterSquad !== 'All' && String(p.squad) !== filterSquad) return false;
@@ -219,17 +258,17 @@ export default function App() {
 
   const navTabStyle = (active) => ({
     flex: 1,
-    padding: '9px 6px',
+    padding: '8px 4px',
     borderRadius: '8px',
     border: active ? '1px solid #facc15' : '1px solid #334155',
     backgroundColor: active ? '#1e293b' : '#0f172a',
     color: active ? '#facc15' : '#94a3b8',
     fontWeight: 'bold',
-    fontSize: '12px',
+    fontSize: '11px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '5px',
+    gap: '4px',
     cursor: 'pointer',
   });
 
@@ -257,6 +296,7 @@ export default function App() {
 
         <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
           <button
+            type="button"
             onClick={handleToggleMusic}
             title={musicOn ? 'Music ON (Tap to mute)' : 'Music OFF (Tap to play)'}
             style={{
@@ -268,13 +308,14 @@ export default function App() {
             {musicOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
 
-          <button onClick={handleCopyBackup} title="Copy Backup Text" style={styles.iconBtn}>
+          <button type="button" onClick={handleCopyBackup} title="Copy Backup Text" style={styles.iconBtn}>
             <Copy size={16} />
           </button>
-          <button onClick={handleExport} title="Download Backup File" style={styles.iconBtn}>
+          <button type="button" onClick={handleExport} title="Download Backup File" style={styles.iconBtn}>
             <Download size={16} />
           </button>
           <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             title="Import Backup File"
             style={styles.iconBtn}
@@ -291,20 +332,23 @@ export default function App() {
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
-        <button onClick={() => setActiveView('heroes')} style={navTabStyle(activeView === 'heroes')}>
-          <Shield size={15} /> Heroes
+      <div style={{ display: 'flex', gap: '5px', marginBottom: '16px' }}>
+        <button type="button" onClick={() => setActiveView('heroes')} style={navTabStyle(activeView === 'heroes')}>
+          <Shield size={14} /> Heroes
         </button>
-        <button onClick={() => setActiveView('squads')} style={navTabStyle(activeView === 'squads')}>
-          <Users size={15} /> Squads
+        <button type="button" onClick={() => setActiveView('overlord')} style={navTabStyle(activeView === 'overlord')}>
+          <Crown size={14} /> Overlord
         </button>
-        <button onClick={() => setActiveView('resources')} style={navTabStyle(activeView === 'resources')}>
-          <Calculator size={15} /> Resources
+        <button type="button" onClick={() => setActiveView('squads')} style={navTabStyle(activeView === 'squads')}>
+          <Users size={14} /> Squads
+        </button>
+        <button type="button" onClick={() => setActiveView('resources')} style={navTabStyle(activeView === 'resources')}>
+          <Calculator size={14} /> Resources
         </button>
       </div>
 
       {activeView === 'heroes' && (
-        <>
+        <div>
           <input
             type="text"
             placeholder="Search hero (e.g. Kimberly, Murphy...)"
@@ -315,7 +359,7 @@ export default function App() {
 
           <div style={styles.filterRow}>
             {['All', 'Tank', 'Aircraft', 'Missile'].map((type) => (
-              <button key={type} onClick={() => setFilterType(type)} style={styles.filterBtn(filterType === type)}>
+              <button key={type} type="button" onClick={() => setFilterType(type)} style={styles.filterBtn(filterType === type)}>
                 {type}
               </button>
             ))}
@@ -324,11 +368,12 @@ export default function App() {
           <div style={{ ...styles.filterRow, marginBottom: '16px' }}>
             {[
               { label: 'All', val: 'All' },
-              { label: 'Squad 1', val: '1' },
-              { label: 'Squad 2', val: '2' },
-              { label: 'Squad 3', val: '3' },
+              { label: 'S1', val: '1' },
+              { label: 'S2', val: '2' },
+              { label: 'S3', val: '3' },
+              { label: 'S4', val: '4' },
             ].map((sq) => (
-              <button key={sq.val} onClick={() => setFilterSquad(sq.val)} style={styles.filterBtn(filterSquad === sq.val)}>
+              <button key={sq.val} type="button" onClick={() => setFilterSquad(sq.val)} style={styles.filterBtn(filterSquad === sq.val)}>
                 {sq.label}
               </button>
             ))}
@@ -346,16 +391,26 @@ export default function App() {
               />
             ))}
           </div>
-        </>
+        </div>
+      )}
+
+      {activeView === 'overlord' && (
+        <OverlordView
+          overlord={overlord}
+          onUpdateOverlord={updateOverlord}
+          onAssignOverlordSquad={handleAssignOverlordSquad}
+        />
       )}
 
       {activeView === 'squads' && (
         <SquadsView
           progress={progress}
           squads={squads}
+          overlord={overlord}
           onAssignSlot={handleAssignSlot}
           onClearSlot={handleClearSlot}
           onResetSquad={handleResetSquad}
+          onRemoveOverlord={() => updateOverlord({ squad: null })}
         />
       )}
 
@@ -364,5 +419,5 @@ export default function App() {
       )}
     </div>
   );
-              }
-              
+    }
+                    

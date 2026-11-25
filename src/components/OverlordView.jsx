@@ -392,7 +392,6 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           </div>
         </div>
       </div>
-    </div>
-  );
-                  }
+    );
+  }
                   

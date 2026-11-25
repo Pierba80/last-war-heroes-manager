@@ -38,7 +38,6 @@ export const getMaxOverlordSkillLevel = (stars = 4) => {
   if (stars === 5) return 35;
   return 40;
 };
-
 export const createDefaultOverlord = () => ({
   unlocked: true,
   avatar: null,
@@ -69,8 +68,8 @@ export const createDefaultOverlord = () => ({
 });
 
 export const calculateOverlordResources = (ov) => {
-  const currentLvl = Math.min(70, Math.max(1, ov.level || 1));
-  const remainingLevels = Math.max(0, 70 - currentLvl);
+  const currentLvl = Math.min(80, Math.max(0, ov.level ?? 1));
+  const remainingLevels = Math.max(0, 80 - currentLvl);
 
   const unlockShards = ov.unlocked ? 0 : 100;
   const totalShards = unlockShards + remainingLevels * 200;
@@ -109,3 +108,4 @@ export const calculateOverlordResources = (ov) => {
     skillBadges,
   };
 };
+      

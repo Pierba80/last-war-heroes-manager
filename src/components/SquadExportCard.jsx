@@ -107,7 +107,8 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
             </div>
           </div>
         </div>
-          {(p.exclusiveWeaponLevel > 0 || p.awakeningStars > 0) && (
+
+        {(p.exclusiveWeaponLevel > 0 || p.awakeningStars > 0) && (
           <div style={{ backgroundColor: '#0f172a', padding: '3px 5px', borderRadius: '5px', fontSize: '9px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '3px' }}>
             {p.exclusiveWeaponLevel > 0 && (
               <span style={{ color: '#fb923c', fontWeight: 'bold' }}>
@@ -160,7 +161,7 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
       </div>
     );
   };
-                return (
+                                    return (
     <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }}>
       <div
         ref={exportRef}
@@ -247,7 +248,7 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
                   <div style={{ color: '#cbd5e1', fontSize: '10px' }}>
                     ATK/DEF/PS: <strong style={{ color: '#4ade80' }}>{overlord.training?.atk || 1}/{overlord.training?.def || 1}/{overlord.training?.hp || 1}</strong> • Skills: <strong style={{ color: '#38bdf8' }}>{overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.brutal || 1}/{overlord.skills?.instinct || 1}/{overlord.skills?.command || 1}</strong>
                   </div>
-                      
+                </div>
               )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
@@ -266,4 +267,4 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
       </div>
     </div>
   );
-                     }
+                    }

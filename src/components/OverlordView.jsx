@@ -1,85 +1,111 @@
 import React from 'react';
-import { Crown, Lock, Unlock, RotateCcw, Plus, Minus, Shield, Sparkles, BookOpen, Award, FileCheck } from 'lucide-react';
-import { OVERLORD_SKILLS, OVERLORD_STATS, createDefaultOverlord, calculateOverlordResources } from '../data/overlordData';
+import { Crown, Lock, Unlock, RotateCcw, Plus, Minus, Shield, Sparkles, BookOpen, Award, FileCheck, Star, Heart } from 'lucide-react';
+import {
+  OVERLORD_SKILLS,
+  OVERLORD_STATS,
+  BOND_ROMAN,
+  getMaxOverlordSkillLevel,
+  getMaxTrainingByBond,
+  createDefaultOverlord,
+  calculateOverlordResources,
+} from '../data/overlordData';
 import HeroAvatar from './HeroAvatar';
 import { styles } from '../styles';
 
 const SQUAD_OPTIONS = Array.from({ length: 4 }, (_, i) => i + 1);
-const SUB_STEPS = Array.from({ length: 5 }, (_, i) => i + 1);
+const TIER_STARS = Array.from({ length: 7 }, (_, i) => i + 1);
+const SUB_BARS = Array.from({ length: 10 }, (_, i) => i + 1);
+const SKILL_STAR_LIST = Array.from({ length: 6 }, (_, i) => i + 1);
 
 export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverlordSquad }) {
-  const ov = overlord || createDefaultOverlord();
+  const ov = { ...createDefaultOverlord(), ...(overlord || {}) };
   const res = calculateOverlordResources(ov);
-
-  const mockHeroForAvatar = { id: 'overlord', name: 'Overlord' };
+  const maxTrainCap = getMaxTrainingByBond(ov.bondRank || 1);
 
   const handleReset = () => {
-    if (!window.confirm('Reset all Overlord levels, training and skills?')) return;
-    const preservedAvatar = ov.avatar;
+    if (!window.confirm('Reset all Overlord stats, bond and skills?')) return;
     onUpdateOverlord({
       ...createDefaultOverlord(),
-      avatar: preservedAvatar,
+      avatar: ov.avatar,
     });
   };
 
   const updateMainLevel = (rawVal) => {
     const parsed = Number(rawVal);
     const safe = Number.isNaN(parsed) ? 1 : parsed;
-    const clamped = Math.max(1, Math.min(60, safe));
+    const clamped = Math.max(1, Math.min(70, safe));
     onUpdateOverlord({
       level: clamped,
-      subLevel: clamped >= 60 ? 0 : ov.subLevel,
+      subLevel: clamped >= 70 ? 0 : ov.subLevel,
     });
   };
 
   const changeSubLevel = (delta) => {
-    if (ov.level >= 60 && delta > 0) return;
-    let totalSteps = (ov.level - 1) * 5 + (ov.subLevel || 0) + delta;
+    if (ov.level >= 70 && delta > 0) return;
+    let totalSteps = (ov.level - 1) * 10 + (ov.subLevel || 0) + delta;
     if (totalSteps < 0) totalSteps = 0;
-    if (totalSteps > 295) totalSteps = 295;
-    const newLevel = Math.floor(totalSteps / 5) + 1;
-    const newSub = newLevel >= 60 ? 0 : totalSteps % 5;
+    if (totalSteps > 690) totalSteps = 690;
+    const newLevel = Math.floor(totalSteps / 10) + 1;
+    const newSub = newLevel >= 70 ? 0 : totalSteps % 10;
     onUpdateOverlord({ level: newLevel, subLevel: newSub });
   };
 
   const updateTraining = (statKey, rawVal) => {
     const parsed = Number(rawVal);
     const safe = Number.isNaN(parsed) ? 1 : parsed;
-    const clamped = Math.max(1, Math.min(200, safe));
+    const clamped = Math.max(1, Math.min(maxTrainCap, safe));
     onUpdateOverlord({
       training: {
-        ...(ov.training || { atk: 1, hp: 1, def: 1 }),
+        ...(ov.training || { atk: 1, def: 1, hp: 1 }),
         [statKey]: clamped,
       },
     });
   };
 
-  const updateSkill = (skillKey, rawVal) => {
+  const updateSkillStars = (skillKey, newStars) => {
+    const clampedStars = Math.max(0, Math.min(6, newStars));
+    const newMax = getMaxOverlordSkillLevel(clampedStars);
+    const currentVal = (ov.skills && ov.skills[skillKey]) || 1;
+    onUpdateOverlord({
+      skillStars: {
+        ...(ov.skillStars || {}),
+        [skillKey]: clampedStars,
+      },
+      skills: {
+        ...(ov.skills || {}),
+        [skillKey]: Math.min(newMax, currentVal),
+      },
+    });
+  };
+
+  const updateSkillLevel = (skillKey, rawVal) => {
+    const stars = (ov.skillStars && ov.skillStars[skillKey]) ?? 4;
+    const maxLvl = getMaxOverlordSkillLevel(stars);
     const parsed = Number(rawVal);
     const safe = Number.isNaN(parsed) ? 1 : parsed;
-    const clamped = Math.max(1, Math.min(40, safe));
+    const clamped = Math.max(1, Math.min(maxLvl, safe));
     onUpdateOverlord({
       skills: {
-        ...(ov.skills || { strike: 1, roar: 1, armor: 1, instinct: 1 }),
+        ...(ov.skills || {}),
         [skillKey]: clamped,
       },
     });
   };
 
   const numInputStyle = {
-    width: '44px',
+    width: '46px',
     textAlign: 'center',
     backgroundColor: '#0f172a',
-    border: '1px solid #334155',
+    border: '1px solid #475569',
     color: '#ffffff',
     borderRadius: '5px',
     padding: '3px 0',
     fontSize: '12px',
     fontWeight: 'bold',
   };
-      return (
+          return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {/* Main Header Card with Avatar, Unlock, Reset & Squad Selector */}
+      {/* Header: Avatar, 7-Star Grade, Squad, Level & 10 Yellow Bars */}
       <div
         style={{
           backgroundColor: '#1e293b',
@@ -92,7 +118,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <HeroAvatar
-              hero={mockHeroForAvatar}
+              hero={{ id: 'overlord', name: 'Overlord' }}
               avatar={ov.avatar}
               borderColor="#ef4444"
               size={52}
@@ -102,72 +128,65 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Crown size={16} color="#facc15" />
-                <strong style={{ fontSize: '17px', color: '#f8fafc' }}>Overlord (Gorilla)</strong>
+                <strong style={{ fontSize: '16px', color: '#f8fafc' }}>Overlord (Gorilla)</strong>
               </div>
-              <span style={{ fontSize: '11px', color: '#fca5a5' }}>
-                {ov.unlocked ? `Active • Level ${ov.level} / 60` : 'Locked (Requires 100 Shards)'}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '4px' }}>
+                {TIER_STARS.map((t) => (
+                  <Star
+                    key={t}
+                    size={15}
+                    onClick={() => onUpdateOverlord({ tier: t })}
+                    fill={t <= (ov.tier || 1) ? '#facc15' : 'none'}
+                    color={t <= (ov.tier || 1) ? '#facc15' : '#475569'}
+                    style={{ cursor: 'pointer' }}
+                  />
+                ))}
+                <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '5px', fontWeight: 'bold' }}>
+                  Grade {ov.tier || 1}/7
+                </span>
+              </div>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button
-              type="button"
-              onClick={handleReset}
-              title="Reset Overlord"
-              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}
-            >
+            <button type="button" onClick={handleReset} title="Reset Overlord" style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}>
               <RotateCcw size={16} />
             </button>
-            <button
-              type="button"
-              onClick={() => onUpdateOverlord({ unlocked: !ov.unlocked })}
-              title={ov.unlocked ? 'Unlocked' : 'Locked'}
-              style={{ background: 'none', border: 'none', color: ov.unlocked ? '#4ade80' : '#94a3b8', cursor: 'pointer', padding: '4px' }}
-            >
+            <button type="button" onClick={() => onUpdateOverlord({ unlocked: !ov.unlocked })} style={{ background: 'none', border: 'none', color: ov.unlocked ? '#4ade80' : '#94a3b8', cursor: 'pointer', padding: '4px' }}>
               {ov.unlocked ? <Unlock size={17} /> : <Lock size={17} />}
             </button>
           </div>
         </div>
 
-        {/* Squad Assignment (Squad 1 - 4) */}
+        {/* Squad Assignment */}
         <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', marginBottom: '10px' }}>
           <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Shield size={13} color="#facc15" /> Assigned Squad:
           </div>
-          <div style={{ display: 'flex', gap: '5px' }}>
-            <button
-              type="button"
-              onClick={() => onAssignOverlordSquad(null)}
-              style={{ ...styles.filterBtn(ov.squad === null), flex: 1, textAlign: 'center', padding: '6px 4px', fontSize: '11px' }}
-            >
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button type="button" onClick={() => onAssignOverlordSquad(null)} style={{ ...styles.filterBtn(ov.squad === null), flex: 1, textAlign: 'center', padding: '6px 2px', fontSize: '11px' }}>
               None
             </button>
             {SQUAD_OPTIONS.map((num) => (
-              <button
-                key={num}
-                type="button"
-                onClick={() => onAssignOverlordSquad(num)}
-                style={{ ...styles.filterBtn(ov.squad === num), flex: 1, textAlign: 'center', padding: '6px 4px', fontSize: '11px' }}
-              >
-                Squad {num}
+              <button key={num} type="button" onClick={() => onAssignOverlordSquad(num)} style={{ ...styles.filterBtn(ov.squad === num), flex: 1, textAlign: 'center', padding: '6px 2px', fontSize: '11px' }}>
+                S{num}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Main Level (1-60) & Sub-Levels (0-5) */}
-        <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>Level:</span>
+        {/* Main Level (1-70) & 10 Yellow Sub-Bars */}
+        <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>Level (1–70):</span>
               <button type="button" onClick={() => updateMainLevel(ov.level - 1)} style={styles.smallBtn}>
                 <Minus size={12} />
               </button>
               <input
                 type="number"
                 min="1"
-                max="60"
+                max="70"
                 value={ov.level}
                 onChange={(e) => updateMainLevel(e.target.value)}
                 style={numInputStyle}
@@ -177,36 +196,62 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
               </button>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              {SUB_STEPS.map((step) => (
-                <div
-                  key={step}
-                  style={{
-                    width: '22px',
-                    height: '6px',
-                    borderRadius: '3px',
-                    backgroundColor: ov.level >= 60 || step <= (ov.subLevel || 0) ? '#facc15' : '#334155',
-                  }}
-                />
-              ))}
-              <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: '4px' }}>
-                {ov.level >= 60 ? 'MAX' : `${ov.subLevel || 0}/5 sub-lvl`}
-              </span>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <button type="button" onClick={() => changeSubLevel(-1)} style={styles.smallBtn}>-1</button>
+              <button type="button" onClick={() => changeSubLevel(1)} style={{ ...styles.smallBtn, backgroundColor: '#dc2626' }}>+1</button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '5px' }}>
-            <button type="button" onClick={() => changeSubLevel(-1)} style={styles.smallBtn}>-1</button>
-            <button type="button" onClick={() => changeSubLevel(1)} style={{ ...styles.smallBtn, backgroundColor: '#dc2626' }}>+1</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            {SUB_BARS.map((bar) => (
+              <div
+                key={bar}
+                style={{
+                  flex: 1,
+                  height: '7px',
+                  borderRadius: '2px',
+                  backgroundColor: ov.level >= 70 || bar <= (ov.subLevel || 0) ? '#facc15' : '#334155',
+                }}
+              />
+            ))}
+            <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '6px', fontWeight: 'bold' }}>
+              {ov.level >= 70 ? 'MAX' : `${ov.subLevel || 0}/10`}
+            </span>
           </div>
         </div>
       </div>
 
-            {/* Training Section (ATK, HP, DEF 1-200) */}
+      {/* Bond Rating & Specialized Training (ATK, DEF, PS) */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <strong style={{ fontSize: '13px', color: '#f8fafc' }}>Overlord Training</strong>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>Max Lv. 200</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', border: '1px solid #ec4899' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#f472b6', fontSize: '12px', fontWeight: 'bold' }}>
+              <Heart size={14} fill="#f472b6" /> Bond Rating: {BOND_ROMAN.at((ov.bondRank || 1) - 1) || 'I'} ({ov.bondProgress || 0}/20)
+            </div>
+            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+              Unlocks Training up to Lv. {maxTrainCap}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button
+              type="button"
+              onClick={() => onUpdateOverlord({ bondRank: Math.max(1, (ov.bondRank || 1) - 1) })}
+              style={styles.smallBtn}
+            >
+              -
+            </button>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#f472b6', minWidth: '24px', textAlign: 'center' }}>
+              {BOND_ROMAN.at((ov.bondRank || 1) - 1) || 'I'}
+            </span>
+            <button
+              type="button"
+              onClick={() => onUpdateOverlord({ bondRank: Math.min(10, (ov.bondRank || 1) + 1) })}
+              style={{ ...styles.smallBtn, backgroundColor: '#db2777' }}
+            >
+              +
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -216,41 +261,38 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
               <div
                 key={st.key}
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
                   backgroundColor: '#0f172a',
                   padding: '8px 10px',
                   borderRadius: '8px',
+                  borderLeft: `4px solid ${st.color}`,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#f8fafc' }}>{st.name}</div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>{st.bonus}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: st.color }}>
+                    {st.label}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                    Max Lv. {maxTrainCap}
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <button
-                    type="button"
-                    onClick={() => updateTraining(st.key, val - 1)}
-                    style={{ ...styles.smallBtn, padding: '4px 6px' }}
-                  >
-                    <Minus size={11} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button type="button" onClick={() => updateTraining(st.key, val - 1)} style={styles.smallBtn}>
+                    <Minus size={12} />
                   </button>
                   <input
                     type="number"
                     min="1"
-                    max="200"
+                    max={maxTrainCap}
                     value={val}
                     onChange={(e) => updateTraining(st.key, e.target.value)}
-                    style={{ ...numInputStyle, width: '44px' }}
+                    style={{ ...numInputStyle, width: '52px', fontSize: '13px' }}
                   />
-                  <button
-                    type="button"
-                    onClick={() => updateTraining(st.key, val + 1)}
-                    style={{ ...styles.smallBtn, padding: '4px 6px' }}
-                  >
-                    <Plus size={11} />
+                  <button type="button" onClick={() => updateTraining(st.key, val + 1)} style={styles.smallBtn}>
+                    <Plus size={12} />
                   </button>
                 </div>
               </div>
@@ -258,63 +300,75 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           })}
         </div>
       </div>
-
-      {/* 4 Overlord Skills (Unlocked at Lv. 1, 10, 20, 30) */}
+                      {/* All 5 Overlord Skills with Stars & Cap */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <strong style={{ fontSize: '13px', color: '#f8fafc' }}>Overlord Skills (4)</strong>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>Max Lv. 40</span>
+          <strong style={{ fontSize: '13px', color: '#f8fafc' }}>Overlord Skills (5)</strong>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>Tap ★ to set skill cap</span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {OVERLORD_SKILLS.map((sk) => {
-            const val = (ov.skills && ov.skills[sk.key]) || 1;
-            const isUnlocked = ov.level >= sk.unlockLevel;
+            const stars = (ov.skillStars && ov.skillStars[sk.key]) ?? 4;
+            const maxSkillLvl = getMaxOverlordSkillLevel(stars);
+            const val = Math.min(maxSkillLvl, (ov.skills && ov.skills[sk.key]) || 1);
+
             return (
               <div
                 key={sk.key}
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
                   backgroundColor: '#0f172a',
                   padding: '8px 10px',
                   borderRadius: '8px',
-                  opacity: isUnlocked ? 1 : 0.55,
+                  border: '1px solid #334155',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
               >
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#f8fafc' }}>{sk.name}</div>
-                  <div style={{ fontSize: '10px', color: isUnlocked ? '#4ade80' : '#f87171' }}>
-                    {isUnlocked ? sk.desc : `Unlocks at Overlord Lv. ${sk.unlockLevel}`}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#facc15' }}>
+                    {sk.name}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '3px' }}>
+                    {SKILL_STAR_LIST.map((s) => (
+                      <Star
+                        key={s}
+                        size={12}
+                        onClick={() => updateSkillStars(sk.key, s)}
+                        fill={s <= stars ? '#facc15' : 'none'}
+                        color={s <= stars ? '#facc15' : '#475569'}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    ))}
+                    <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: '4px' }}>
+                      Max {maxSkillLvl}
+                    </span>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <button
-                    type="button"
-                    disabled={!isUnlocked}
-                    onClick={() => updateSkill(sk.key, val - 1)}
-                    style={{ ...styles.smallBtn, padding: '4px 6px' }}
-                  >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                  <button type="button" onClick={() => updateSkillLevel(sk.key, val - 1)} style={{ ...styles.smallBtn, padding: '4px 6px' }}>
                     <Minus size={11} />
                   </button>
                   <input
                     type="number"
                     min="1"
-                    max="40"
-                    disabled={!isUnlocked}
+                    max={maxSkillLvl}
                     value={val}
-                    onChange={(e) => updateSkill(sk.key, e.target.value)}
+                    onChange={(e) => updateSkillLevel(sk.key, e.target.value)}
                     style={{ ...numInputStyle, width: '40px' }}
                   />
+                  <button type="button" onClick={() => updateSkillLevel(sk.key, val + 1)} style={{ ...styles.smallBtn, padding: '4px 6px' }}>
+                    <Plus size={11} />
+                  </button>
                   <button
                     type="button"
-                    disabled={!isUnlocked}
-                    onClick={() => updateSkill(sk.key, val + 1)}
-                    style={{ ...styles.smallBtn, padding: '4px 6px' }}
+                    onClick={() => updateSkillLevel(sk.key, maxSkillLvl)}
+                    style={{ ...styles.smallBtn, padding: '4px 6px', backgroundColor: '#2563eb', fontSize: '10px' }}
                   >
-                    <Plus size={11} />
+                    MAX
                   </button>
                 </div>
               </div>
@@ -322,7 +376,6 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           })}
         </div>
       </div>
-                    
 
       {/* Remaining Resources to Max Overlord */}
       <div style={{ backgroundColor: '#1e293b', border: '1px solid #ef4444', borderRadius: '10px', padding: '12px' }}>
@@ -360,6 +413,5 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
         </div>
       </div>
     </div>
-   );
-  }
-                  
+  );
+      }

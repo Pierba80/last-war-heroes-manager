@@ -201,20 +201,28 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
               <button type="button" onClick={() => changeSubLevel(1)} style={{ ...styles.smallBtn, backgroundColor: '#dc2626' }}>+1</button>
             </div>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            {SUB_BARS.map((bar) => (
-              <div
-                key={bar}
-                style={{
-                  flex: 1,
-                  height: '7px',
-                  borderRadius: '2px',
-                  backgroundColor: ov.level >= 70 || bar <= (ov.subLevel || 0) ? '#facc15' : '#334155',
-                }}
-              />
-            ))}
-            <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '6px', fontWeight: 'bold' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {SUB_BARS.map((bar) => {
+              const active = ov.level >= 70 || bar <= (ov.subLevel || 0);
+              return (
+                <div
+                  key={bar}
+                  onClick={() => {
+                    if (ov.level >= 70) return;
+                    const nextSub = ov.subLevel === bar ? bar - 1 : bar;
+                    onUpdateOverlord({ subLevel: nextSub });
+                  }}
+                  style={{
+                    flex: 1,
+                    height: '12px',
+                    borderRadius: '3px',
+                    backgroundColor: active ? '#facc15' : '#334155',
+                    cursor: 'pointer',
+                  }}
+                />
+              );
+            })}
+            <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '6px', fontWeight: 'bold', minWidth: '30px' }}>
               {ov.level >= 70 ? 'MAX' : `${ov.subLevel || 0}/10`}
             </span>
           </div>

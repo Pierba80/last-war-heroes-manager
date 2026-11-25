@@ -13,6 +13,7 @@ import { styles } from '../styles';
 
 const SQUAD_OPTIONS = Array.from({ length: 4 }, (_, i) => i + 1);
 const TIER_STARS = Array.from({ length: 7 }, (_, i) => i + 1);
+const SUB_BARS = Array.from({ length: 10 }, (_, i) => i + 1);
 const SKILL_STAR_LIST = Array.from({ length: 6 }, (_, i) => i + 1);
 
 export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverlordSquad }) {
@@ -20,6 +21,10 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
   const res = calculateOverlordResources(ov);
   const bondInfo = getBondInfo(ov.bondRank || 1);
   const maxTrainCap = bondInfo.maxTrain;
+
+  const currentLvl = Math.min(80, Math.max(0, ov.level ?? 1));
+  const autoStars = Math.min(7, Math.floor(currentLvl / 10) + 1);
+  const autoBars = currentLvl === 0 ? 0 : currentLvl % 10 === 0 ? 10 : currentLvl % 10;
 
   const handleReset = () => {
     if (!window.confirm('Reset all Overlord stats, bond and skills?')) return;
@@ -31,9 +36,12 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
 
   const updateMainLevel = (rawVal) => {
     const parsed = Number(rawVal);
-    const safe = Number.isNaN(parsed) ? 1 : parsed;
-    const clamped = Math.max(1, Math.min(70, safe));
-    onUpdateOverlord({ level: clamped });
+    const safe = Number.isNaN(parsed) ? 0 : parsed;
+    const clamped = Math.max(0, Math.min(80, safe));
+    onUpdateOverlord({
+      level: clamped,
+      tier: Math.min(7, Math.floor(clamped / 10) + 1),
+    });
   };
 
   const updateBondProgress = (rawVal) => {
@@ -96,7 +104,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     fontSize: '13px',
     fontWeight: 'bold',
   };
-        return (
+                          return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -122,19 +130,17 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
                 <Crown size={16} color="#facc15" />
                 <strong style={{ fontSize: '16px', color: '#f8fafc' }}>Overlord (Gorilla)</strong>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '4px', pointerEvents: 'none' }}>
                 {TIER_STARS.map((t) => (
                   <Star
                     key={t}
                     size={15}
-                    onClick={() => onUpdateOverlord({ tier: t })}
-                    fill={t <= (ov.tier || 1) ? '#facc15' : 'none'}
-                    color={t <= (ov.tier || 1) ? '#facc15' : '#475569'}
-                    style={{ cursor: 'pointer' }}
+                    fill={t <= autoStars ? '#facc15' : 'none'}
+                    color={t <= autoStars ? '#facc15' : '#475569'}
                   />
                 ))}
                 <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '5px', fontWeight: 'bold' }}>
-                  Grade {ov.tier || 1}/7
+                  Grade {autoStars}/7
                 </span>
               </div>
             </div>
@@ -166,31 +172,50 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#f8fafc' }}>
-              Overlord Level
+        <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#f8fafc' }}>
+                Overlord Level
+              </div>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                Grade 1–7 stars • Max Lv. 80
+              </div>
             </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-              Range: 1 to 70 (Max Lv. 70)
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button type="button" onClick={() => updateMainLevel(currentLvl - 1)} style={styles.smallBtn}>
+                <Minus size={14} />
+              </button>
+              <input
+                type="number"
+                min="0"
+                max="80"
+                value={currentLvl}
+                onChange={(e) => updateMainLevel(e.target.value)}
+                style={numInputStyle}
+              />
+              <button type="button" onClick={() => updateMainLevel(currentLvl + 1)} style={{ ...styles.smallBtn, backgroundColor: '#dc2626' }}>
+                <Plus size={14} />
+              </button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button type="button" onClick={() => updateMainLevel(ov.level - 1)} style={styles.smallBtn}>
-              <Minus size={14} />
-            </button>
-            <input
-              type="number"
-              min="1"
-              max="70"
-              value={ov.level}
-              onChange={(e) => updateMainLevel(e.target.value)}
-              style={numInputStyle}
-            />
-            <button type="button" onClick={() => updateMainLevel(ov.level + 1)} style={{ ...styles.smallBtn, backgroundColor: '#dc2626' }}>
-              <Plus size={14} />
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', pointerEvents: 'none' }}>
+            {SUB_BARS.map((bar) => (
+              <div
+                key={bar}
+                style={{
+                  flex: 1,
+                  height: '7px',
+                  borderRadius: '2px',
+                  backgroundColor: bar <= autoBars ? '#facc15' : '#334155',
+                }}
+              />
+            ))}
+            <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '6px', fontWeight: 'bold', minWidth: '30px' }}>
+              {currentLvl >= 80 ? 'MAX' : `${autoBars}/10`}
+            </span>
           </div>
         </div>
       </div>
@@ -261,7 +286,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
             </div>
           </div>
         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {OVERLORD_STATS.map((st) => {
             const val = (ov.training && ov.training[st.key]) || 1;
             return (
@@ -420,4 +445,4 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       </div>
     </div>
   );
-            }
+                            }

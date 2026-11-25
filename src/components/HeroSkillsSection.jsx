@@ -78,10 +78,8 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
     fontSize: '12px',
     fontWeight: 'bold',
   };
-
-  return (
+      return (
     <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #334155', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      {/* Base 3 Skills with Direct Input */}
       <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
           <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>Skills</span>
@@ -123,7 +121,6 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
         </div>
       </div>
 
-      {/* Exclusive Weapon */}
       {hero.hasExclusiveWeapon && (
         <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -154,7 +151,6 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
         </div>
       )}
 
-      {/* Hero Awakening */}
       {hero.hasExclusiveWeapon && (
         <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', opacity: canAwaken ? 1 : 0.55 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: canAwaken ? '8px' : 0 }}>
@@ -202,7 +198,6 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
             )}
           </div>
 
-          {/* 4th Skill with Star Cap & Direct Input */}
           {canAwaken && awakeningStars > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1e293b', padding: '6px 8px', borderRadius: '6px' }}>
               <div>
@@ -231,9 +226,13 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
                   style={{ ...styles.smallBtn, padding: '4px 6px' }}
                 >
                   <Plus size={12} />
-    )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+                                                   }
 
-)}
-
-);
-                  }

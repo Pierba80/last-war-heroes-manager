@@ -108,7 +108,7 @@ export default function ResourcesView({ progress, squads }) {
 
   const getTargetHeroIds = () => {
     const ids = new Set();
-    const squadList = scope === 'all' ? Array.from({ length: 3 }, (_, i) => i + 1) : [Number(scope)];
+    const squadList = scope === 'all' ? Array.from({ length: 4 }, (_, i) => i + 1) : [Number(scope)];
 
     squadList.forEach((sqNum) => {
       const slots = squads[sqNum] || {};
@@ -179,17 +179,19 @@ export default function ResourcesView({ progress, squads }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', gap: '5px', marginBottom: '14px' }}>
         {[
-          { label: 'Squad 1', val: '1' },
-          { label: 'Squad 2', val: '2' },
-          { label: 'Squad 3', val: '3' },
-          { label: 'All Squads', val: 'all' },
+          { label: 'S1', val: '1' },
+          { label: 'S2', val: '2' },
+          { label: 'S3', val: '3' },
+          { label: 'S4', val: '4' },
+          { label: 'All', val: 'all' },
         ].map((item) => (
           <button
             key={item.val}
+            type="button"
             onClick={() => setScope(item.val)}
-            style={{ ...styles.filterBtn(scope === item.val), flex: 1, textAlign: 'center' }}
+            style={{ ...styles.filterBtn(scope === item.val), flex: 1, textAlign: 'center', padding: '7px 4px' }}
           >
             {item.label}
           </button>
@@ -263,7 +265,7 @@ export default function ResourcesView({ progress, squads }) {
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>Gear 5★ Red (10/pc)</div>
             </div>
           </div>
-                {totalCeramic > 0 && (
+                  {totalCeramic > 0 && (
             <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '8px 12px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Layers size={15} color="#38bdf8" /> Dielectric Ceramic (missing UR gear):
@@ -342,4 +344,5 @@ export default function ResourcesView({ progress, squads }) {
       )}
     </div>
   );
-}
+          }
+                      

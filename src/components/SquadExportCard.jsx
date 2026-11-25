@@ -242,12 +242,12 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
                       }}
                       style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #ef4444', objectFit: 'cover' }}
                     />
-                    <strong style={{ color: '#fca5a5' }}>OVERLORD Lv.{overlord.level || 1}</strong>
+                    <strong style={{ color: '#fca5a5' }}>OVERLORD G{overlord.tier || 1} • Lv.{overlord.level || 1}</strong>
                   </div>
                   <div style={{ color: '#cbd5e1', fontSize: '10px' }}>
-                    Train: <strong style={{ color: '#4ade80' }}>{overlord.training?.atk || 1}/{overlord.training?.hp || 1}/{overlord.training?.def || 1}</strong> • Skills: <strong style={{ color: '#38bdf8' }}>{overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.armor || 1}/{overlord.skills?.instinct || 1}</strong>
+                    ATK/DEF/PS: <strong style={{ color: '#4ade80' }}>{overlord.training?.atk || 1}/{overlord.training?.def || 1}/{overlord.training?.hp || 1}</strong> • Skills: <strong style={{ color: '#38bdf8' }}>{overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.brutal || 1}/{overlord.skills?.instinct || 1}/{overlord.skills?.command || 1}</strong>
                   </div>
-                </div>
+                      
               )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>

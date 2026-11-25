@@ -14,7 +14,6 @@ const BLUEPRINT_COSTS_PER_STAR = {
 
 const GEAR_KEYS = ['railgun', 'chip', 'armor', 'radar'];
 
-// Exclusive Weapon shard cost per level (1 to 30, total = 1,730)
 const WEAPON_SHARD_COSTS = [
   0,
   50, 10, 10, 15, 15, 20, 20, 25, 25, 40,
@@ -22,7 +21,6 @@ const WEAPON_SHARD_COSTS = [
   60, 60, 70, 70, 80, 80, 90, 90, 100, 150,
 ];
 
-// Skill Medal cost to upgrade from (level - 1) to level (1 to 40)
 const SKILL_MEDAL_COSTS = [
   0, 0,
   100, 150, 200, 250, 350, 450, 600, 800, 1000,
@@ -47,7 +45,6 @@ const calculateSkillMedalsNeeded = (hero, p) => {
 
   let medals = 0;
 
-  // 3 Base Skills up to current unlocked max (Lv. 30..40)
   currentSkills.forEach((lvl) => {
     const start = Math.max(1, lvl);
     for (let nextLvl = start + 1; nextLvl <= maxBaseSkill; nextLvl++) {
@@ -55,7 +52,6 @@ const calculateSkillMedalsNeeded = (hero, p) => {
     }
   });
 
-  // 4th Awakening Skill up to current red-star cap
   const awakenStars = p.awakeningStars || 0;
   if (hero.hasExclusiveWeapon && awakenStars > 0) {
     const maxAwakenLvl = getMaxAwakeningSkillLevel(awakenStars);
@@ -98,7 +94,16 @@ const calculateGearNeeds = (gearObj = {}) => {
 
   return { goldBlueprints, mythicBlueprints, ceramic };
 };
-  export default function ResourcesView({ progress, squads }) {
+
+const getSummaryCardStyle = (borderColor) => {
+  return {
+    backgroundColor: '#1e293b',
+    border: `1px solid ${borderColor}`,
+    borderRadius: '10px',
+    padding: '10px 12px',
+  };
+};
+export default function ResourcesView({ progress, squads }) {
   const [scope, setScope] = useState('1');
 
   const getTargetHeroIds = () => {
@@ -174,7 +179,6 @@ const calculateGearNeeds = (gearObj = {}) => {
 
   return (
     <div>
-      {/* Scope Filter */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
         {[
           { label: 'Squad 1', val: '1' },
@@ -197,10 +201,9 @@ const calculateGearNeeds = (gearObj = {}) => {
           No heroes assigned to this squad yet. Go to the <strong>Squads</strong> tab to build your formation!
         </div>
       ) : (
-        <>
-          {/* Summary Grid (6 Cards) */}
+        <div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
-            <div style={summaryCardStyle('#eab308')}>
+            <div style={getSummaryCardStyle('#eab308')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#facc15', fontSize: '12px', fontWeight: 'bold' }}>
                 <Sparkles size={15} /> UR Shards
               </div>
@@ -210,7 +213,7 @@ const calculateGearNeeds = (gearObj = {}) => {
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>Heroes to 5★ max</div>
             </div>
 
-            <div style={summaryCardStyle('#a855f7')}>
+            <div style={getSummaryCardStyle('#a855f7')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#d8b4fe', fontSize: '12px', fontWeight: 'bold' }}>
                 <Sparkles size={15} /> SSR Shards
               </div>
@@ -220,7 +223,7 @@ const calculateGearNeeds = (gearObj = {}) => {
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>Purple heroes to 5★</div>
             </div>
 
-            <div style={summaryCardStyle('#f97316')}>
+            <div style={getSummaryCardStyle('#f97316')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fdba74', fontSize: '12px', fontWeight: 'bold' }}>
                 <Sword size={15} /> Weapon Shards
               </div>
@@ -230,7 +233,7 @@ const calculateGearNeeds = (gearObj = {}) => {
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>Exclusive Wpn to Lv.30</div>
             </div>
 
-            <div style={summaryCardStyle('#38bdf8')}>
+            <div style={getSummaryCardStyle('#38bdf8')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7dd3fc', fontSize: '12px', fontWeight: 'bold' }}>
                 <Award size={15} /> Skill Medals
               </div>
@@ -240,7 +243,7 @@ const calculateGearNeeds = (gearObj = {}) => {
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>Skills to unlocked cap</div>
             </div>
 
-            <div style={summaryCardStyle('#f59e0b')}>
+            <div style={getSummaryCardStyle('#f59e0b')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fcd34d', fontSize: '12px', fontWeight: 'bold' }}>
                 <FileText size={15} /> Gold Blueprints
               </div>
@@ -250,7 +253,7 @@ const calculateGearNeeds = (gearObj = {}) => {
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>Gear 1★ to 4★ (50/pc)</div>
             </div>
 
-            <div style={summaryCardStyle('#ef4444')}>
+            <div style={getSummaryCardStyle('#ef4444')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fca5a5', fontSize: '12px', fontWeight: 'bold' }}>
                 <Flame size={15} /> Mythic Blueprints
               </div>
@@ -260,8 +263,7 @@ const calculateGearNeeds = (gearObj = {}) => {
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>Gear 5★ Red (10/pc)</div>
             </div>
           </div>
-
-          {totalCeramic > 0 && (
+                {totalCeramic > 0 && (
             <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '8px 12px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Layers size={15} color="#38bdf8" /> Dielectric Ceramic (missing UR gear):
@@ -270,7 +272,6 @@ const calculateGearNeeds = (gearObj = {}) => {
             </div>
           )}
 
-          {/* Per-Hero Breakdown */}
           <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '8px' }}>
             Breakdown by Hero ({heroBreakdown.length})
           </div>
@@ -318,33 +319,27 @@ const calculateGearNeeds = (gearObj = {}) => {
                       {shardsNeeded === 0 ? 'MAX' : shardsNeeded}
                     </strong>
                     {hero.hasExclusiveWeapon && (
-                      <>
+                      <span>
                         {' '}• Wpn:{' '}
                         <strong style={{ color: weaponShards === 0 ? '#4ade80' : '#fb923c' }}>
                           {weaponShards === 0 ? 'MAX' : weaponShards}
                         </strong>
-                      </>
+                      </span>
                     )}
                   </div>
                   <div style={{ color: '#7dd3fc' }}>
-                    Medals: {skillMedals === 0 ? 'MAX' : skillMedals.toLocaleString()}
-
-<div style={{ color: '#cbd5e1' }}>
-BP: <strong style={{ color: '#fcd34d' }}>{gearInfo.goldBlueprints} Gold •{' '}
-<strong style={{ color: '#fca5a5' }}>{gearInfo.mythicBlueprints} Red
-
-
-
-))}
-
-</>
-)}
-
-);
+                    Medals: <strong>{skillMedals === 0 ? 'MAX' : skillMedals.toLocaleString()}</strong>
+                  </div>
+                  <div style={{ color: '#cbd5e1' }}>
+                    BP: <strong style={{ color: '#fcd34d' }}>{gearInfo.goldBlueprints}</strong> Gold •{' '}
+                    <strong style={{ color: '#fca5a5' }}>{gearInfo.mythicBlueprints}</strong> Red
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
-const summaryCardStyle = (borderColor) => ({
-backgroundColor: '#1e293b',
-border: 1px solid ${borderColor},
-borderRadius: '10px',
-padding: '10px 12px',
-});

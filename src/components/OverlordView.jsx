@@ -202,23 +202,39 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
         </div>
       </div>
 
-      {/* Training Section (ATK, HP, DEF 1-200) */}
+            {/* Training Section (ATK, HP, DEF 1-200) */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <strong style={{ fontSize: '13px', color: '#f8fafc' }}>Combat Training</strong>
+          <strong style={{ fontSize: '13px', color: '#f8fafc' }}>Overlord Training</strong>
           <span style={{ fontSize: '11px', color: '#94a3b8' }}>Max Lv. 200</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {OVERLORD_STATS.map((st) => {
             const val = (ov.training && ov.training[st.key]) || 1;
             return (
-              <div key={st.key} style={{ backgroundColor: '#0f172a', padding: '8px 6px', borderRadius: '8px', textAlign: 'center', borderTop: `2px solid ${st.color}` }}>
-                <div style={{ fontSize: '10px', color: st.color, fontWeight: 'bold', marginBottom: '5px' }}>
-                  {st.label}
+              <div
+                key={st.key}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: '#0f172a',
+                  padding: '8px 10px',
+                  borderRadius: '8px',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#f8fafc' }}>{st.name}</div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>{st.bonus}</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                  <button type="button" onClick={() => updateTraining(st.key, val - 1)} style={{ ...styles.smallBtn, padding: '4px 5px' }}>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <button
+                    type="button"
+                    onClick={() => updateTraining(st.key, val - 1)}
+                    style={{ ...styles.smallBtn, padding: '4px 6px' }}
+                  >
                     <Minus size={11} />
                   </button>
                   <input
@@ -227,9 +243,13 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
                     max="200"
                     value={val}
                     onChange={(e) => updateTraining(st.key, e.target.value)}
-                    style={{ ...numInputStyle, width: '38px' }}
+                    style={{ ...numInputStyle, width: '44px' }}
                   />
-                  <button type="button" onClick={() => updateTraining(st.key, val + 1)} style={{ ...styles.smallBtn, padding: '4px 5px' }}>
+                  <button
+                    type="button"
+                    onClick={() => updateTraining(st.key, val + 1)}
+                    style={{ ...styles.smallBtn, padding: '4px 6px' }}
+                  >
                     <Plus size={11} />
                   </button>
                 </div>
@@ -238,8 +258,6 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           })}
         </div>
       </div>
-      );
-})}
 
       {/* 4 Overlord Skills (Unlocked at Lv. 1, 10, 20, 30) */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
@@ -248,83 +266,31 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           <span style={{ fontSize: '11px', color: '#94a3b8' }}>Max Lv. 40</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {OVERLORD_SKILLS.map((sk) => {
-            const isUnlocked = ov.level >= sk.unlockLevel;
             const val = (ov.skills && ov.skills[sk.key]) || 1;
+            const isUnlocked = ov.level >= sk.unlockLevel;
             return (
               <div
                 key={sk.key}
                 style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                   backgroundColor: '#0f172a',
-                  padding: '8px',
+                  padding: '8px 10px',
                   borderRadius: '8px',
-                  opacity: isUnlocked ? 1 : 0.5,
-                  border: isUnlocked ? '1px solid #334155' : '1px dashed #334155',
+                  opacity: isUnlocked ? 1 : 0.55,
                 }}
               >
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: isUnlocked ? '#facc15' : '#94a3b8' }}>
-                  {sk.name}
-                </div>
-                <div style={{ fontSize: '9px', color: '#64748b', marginBottom: '6px' }}>
-                  {isUnlocked ? sk.sub : `Unlocks at Overlord Lv.${sk.unlockLevel}`}
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
-                  <button
-                    type="button"
-                    disabled={!isUnlocked}
-                    onClick={() => updateSkill(sk.key, val - 1)}
-                    style={{ ...styles.smallBtn, padding: '4px 6px' }}
-                  >
-                    <Minus size={11} />
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max="40"
-                    disabled={!isUnlocked}
-                    value={val}
-                    onChange={(e) => updateSkill(sk.key, e.target.value)}
-                    style={{ ...numInputStyle, width: '40px' }}
-                  />
-                  <button
-                    type="button"
-                    disabled={!isUnlocked}
-                    onClick={() => updateSkill(sk.key, val + 1)}
-                    style={{ ...styles.smallBtn, padding: '4px 6px' }}
-                  >
-                    <Plus size={11} />
-                             {/* 4 Overlord Skills (Unlocked at Lv. 1, 10, 20, 30) */}
-      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <strong style={{ fontSize: '13px', color: '#f8fafc' }}>Overlord Skills (4)</strong>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>Max Lv. 40</span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {OVERLORD_SKILLS.map((sk) => {
-            const isUnlocked = ov.level >= sk.unlockLevel;
-            const val = (ov.skills && ov.skills[sk.key]) || 1;
-            return (
-              <div
-                key={sk.key}
-                style={{
-                  backgroundColor: '#0f172a',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  opacity: isUnlocked ? 1 : 0.5,
-                  border: isUnlocked ? '1px solid #334155' : '1px dashed #334155',
-                }}
-              >
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: isUnlocked ? '#facc15' : '#94a3b8' }}>
-                  {sk.name}
-                </div>
-                <div style={{ fontSize: '9px', color: '#64748b', marginBottom: '6px' }}>
-                  {isUnlocked ? sk.sub : `Unlocks at Overlord Lv.${sk.unlockLevel}`}
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#f8fafc' }}>{sk.name}</div>
+                  <div style={{ fontSize: '10px', color: isUnlocked ? '#4ade80' : '#f87171' }}>
+                    {isUnlocked ? sk.desc : `Unlocks at Overlord Lv. ${sk.unlockLevel}`}
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <button
                     type="button"
                     disabled={!isUnlocked}
@@ -356,6 +322,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           })}
         </div>
       </div>
+                    
 
       {/* Remaining Resources to Max Overlord */}
       <div style={{ backgroundColor: '#1e293b', border: '1px solid #ef4444', borderRadius: '10px', padding: '12px' }}>

@@ -12,7 +12,23 @@ export const OVERLORD_STATS = [
   { key: 'hp', label: 'PS (Vita / HP)', color: '#4ade80' },
 ];
 
-export const BOND_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+export const BOND_TIERS = [
+  { rank: 1, roman: 'I', label: 'Novizio', color: '#4ade80', maxTrain: 140 },
+  { rank: 2, roman: 'II', label: 'Alleato', color: '#4ade80', maxTrain: 180 },
+  { rank: 3, roman: 'III', label: 'Compagno', color: '#38bdf8', maxTrain: 220 },
+  { rank: 4, roman: 'IV', label: 'Fedele', color: '#38bdf8', maxTrain: 260 },
+  { rank: 5, roman: 'V', label: 'Partner Vincolato', color: '#e879f9', maxTrain: 340 },
+  { rank: 6, roman: 'VI', label: 'Partner Vincolato+', color: '#c084fc', maxTrain: 380 },
+  { rank: 7, roman: 'VII', label: 'Guardiano', color: '#facc15', maxTrain: 420 },
+  { rank: 8, roman: 'VIII', label: 'Campione', color: '#facc15', maxTrain: 450 },
+  { rank: 9, roman: 'IX', label: 'Leggenda', color: '#f87171', maxTrain: 480 },
+  { rank: 10, roman: 'X', label: 'Supremo', color: '#ef4444', maxTrain: 500 },
+];
+
+export const getBondInfo = (bondRank = 1) => {
+  const idx = Math.min(9, Math.max(0, (bondRank || 1) - 1));
+  return BOND_TIERS.at(idx);
+};
 
 export const getMaxOverlordSkillLevel = (stars = 4) => {
   if (stars <= 1) return 15;
@@ -23,29 +39,24 @@ export const getMaxOverlordSkillLevel = (stars = 4) => {
   return 40;
 };
 
-export const getMaxTrainingByBond = (bondRank = 1) => {
-  return Math.min(500, 100 + bondRank * 40);
-};
-
 export const createDefaultOverlord = () => ({
   unlocked: true,
   avatar: null,
-  tier: 6,          // Gorilla Grade (1 - 7)
-  level: 56,        // Main Level (1 - 70)
-  subLevel: 0,      // 10 yellow bars (0 - 10)
-  bondRank: 5,      // Bond Rating I..X (1 - 10)
-  bondProgress: 0,  // Promotion points (0 - 20)
+  tier: 6,
+  level: 56,
+  bondRank: 5,
+  bondProgress: 18,
   training: {
-    atk: 1,
-    def: 1,
-    hp: 1,
+    atk: 309,
+    def: 324,
+    hp: 339,
   },
   skills: {
-    strike: 1,
-    roar: 1,
-    brutal: 1,
-    instinct: 1,
-    command: 1,
+    strike: 34,
+    roar: 33,
+    brutal: 30,
+    instinct: 30,
+    command: 30,
   },
   skillStars: {
     strike: 5,
@@ -59,16 +70,11 @@ export const createDefaultOverlord = () => ({
 
 export const calculateOverlordResources = (ov) => {
   const currentLvl = Math.min(70, Math.max(1, ov.level || 1));
-  const currentSub = Math.min(10, Math.max(0, ov.subLevel || 0));
-
-  // Total sub-steps from Lv.1 to Lv.70 (69 levels * 10 bars = 690 steps)
-  const completedSteps = (currentLvl - 1) * 10 + currentSub;
-  const remainingSteps = Math.max(0, 690 - completedSteps);
+  const remainingLevels = Math.max(0, 70 - currentLvl);
 
   const unlockShards = ov.unlocked ? 0 : 100;
-  const totalShards = unlockShards + remainingSteps * 20;
+  const totalShards = unlockShards + remainingLevels * 200;
 
-  // Specialized Training up to Lv. 500
   const tr = ov.training || { atk: 1, def: 1, hp: 1 };
   let guidebooks = 0;
   let certificates = 0;
@@ -83,7 +89,6 @@ export const calculateOverlordResources = (ov) => {
     }
   });
 
-  // 5 Skills up to their current star cap (or Lv. 40 max)
   const sk = ov.skills || {};
   const st = ov.skillStars || {};
   let skillBadges = 0;
@@ -104,4 +109,3 @@ export const calculateOverlordResources = (ov) => {
     skillBadges,
   };
 };
-                                         

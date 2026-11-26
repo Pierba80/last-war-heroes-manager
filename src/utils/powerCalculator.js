@@ -13,6 +13,10 @@ export const formatPower = (num) => {
 };
 
 export const calculateHeroPower = (hero, p = {}) => {
+  if (p.manualPowerM !== undefined && p.manualPowerM !== null && p.manualPowerM !== '' && Number(p.manualPowerM) > 0) {
+    return Math.round(Number(p.manualPowerM) * 1_000_000);
+  }
+
   if (!p.unlocked && (p.level || 1) <= 1 && (p.stars || 0) === 0) {
     return 0;
   }
@@ -68,14 +72,12 @@ export const calculateHeroPower = (hero, p = {}) => {
   const rawPower = (levelPower + starPower + skillsPower + weaponPower + awakenPower + gearPower) * roleMult;
   return Math.round(rawPower * HERO_POWER_CALIBRATION);
 };
-
-export const calculateOverlordPower = (ov = {}) => {
+  export const calculateOverlordPower = (ov = {}) => {
   if (ov.manualPowerM !== undefined && ov.manualPowerM !== null && ov.manualPowerM !== '' && Number(ov.manualPowerM) > 0) {
     return Math.round(Number(ov.manualPowerM) * 1_000_000);
   }
 
   if (!ov.unlocked) return 0;
-  
 
   const level = Math.max(0, ov.level || 0);
   const levelPower = 150_000 + Math.pow(level, 1.55) * 9_200;
@@ -101,4 +103,3 @@ export const calculateOverlordPower = (ov = {}) => {
   const rawOvPower = levelPower + bondPower + trainPower + skillsPower;
   return Math.round(rawOvPower * OVERLORD_POWER_CALIBRATION);
 };
-    

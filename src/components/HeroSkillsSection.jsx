@@ -3,236 +3,291 @@ import { Sword, Flame, Star, Plus, Minus } from 'lucide-react';
 import { getMaxSkillLevel } from '../data/heroesData';
 import { styles } from '../styles';
 
-const SKILL_NAMES = ['Auto Attack', 'Tactic', 'Passive'];
-const STAR_LIST = Array.from({ length: 5 }, (_, i) => i + 1);
+const AWAKEN_STARS = Array.from({ length: 5 }, (_, i) => i + 1);
+const AWAKEN_TIERS = Array.from({ length: 5 }, (_, i) => i + 1);
 
-export const getMaxAwakeningSkillLevel = (awakeningStars = 0) => {
-  if (awakeningStars <= 0) return 1;
-  if (awakeningStars === 1) return 10;
-  if (awakeningStars === 2) return 20;
-  if (awakeningStars === 3) return 30;
-  if (awakeningStars === 4) return 35;
+export const getMaxAwakeningSkillLevel = (awakenStars = 0) => {
+  if (awakenStars <= 0) return 10;
+  if (awakenStars === 1) return 20;
+  if (awakenStars === 2) return 25;
+  if (awakenStars === 3) return 30;
+  if (awakenStars === 4) return 35;
   return 40;
 };
 
 export default function HeroSkillsSection({ hero, progress, onUpdate }) {
   const ewLevel = progress.exclusiveWeaponLevel || 0;
-  const maxSkillLvl = getMaxSkillLevel(ewLevel);
-  const skills = Array.isArray(progress.skills) && progress.skills.length === 3
+  const maxSkillLevel = getMaxSkillLevel(ewLevel);
+  const currentSkills = Array.isArray(progress.skills) && progress.skills.length === 3
     ? progress.skills
     : Array(3).fill(1);
 
-  const awakeningStars = progress.awakeningStars || 0;
-  const maxAwakenSkillLvl = getMaxAwakeningSkillLevel(awakeningStars);
-  const awakeningSkill = Math.min(maxAwakenSkillLvl, progress.awakeningSkill || 1);
+  const awakenStars = progress.awakeningStars || 0;
+  const awakenTiers = progress.awakeningTiers || 0;
+  const maxAwakenSkill = getMaxAwakeningSkillLevel(awakenStars);
+  const currentAwakenSkill = Math.min(maxAwakenSkill, Math.max(1, progress.awakeningSkill || 1));
 
-  const updateSingleSkill = (index, rawValue) => {
+  const updateSkill = (idx, rawValue) => {
     const parsed = Number(rawValue);
     const safeVal = Number.isNaN(parsed) ? 1 : parsed;
-    const clamped = Math.max(1, Math.min(maxSkillLvl, safeVal));
-    const updated = [...skills];
-    updated[index] = clamped;
+    const clamped = Math.max(1, Math.min(maxSkillLevel, safeVal));
+    const updated = [...currentSkills];
+    updated[idx] = clamped;
     onUpdate(hero.id, { skills: updated });
   };
 
-  const updateWeaponLevel = (newValue) => {
-    const clamped = Math.max(0, Math.min(30, newValue));
-    const newMaxSkill = getMaxSkillLevel(clamped);
-    const updates = {
-      exclusiveWeaponLevel: clamped,
-      skills: skills.map((s) => Math.min(newMaxSkill, s)),
-    };
-    if (clamped < 20) {
-      updates.awakeningStars = 0;
-      updates.awakeningSkill = 1;
-    }
-    onUpdate(hero.id, updates);
-  };
-
-  const updateAwakeningStars = (newStars) => {
-    const clampedStars = Math.max(0, Math.min(5, newStars));
-    const newMaxAwaken = getMaxAwakeningSkillLevel(clampedStars);
+  const updateWeaponLevel = (rawValue) => {
+    const parsed = Number(rawValue);
+    const safeVal = Number.isNaN(parsed) ? 0 : parsed;
+    const newEw = Math.max(0, Math.min(30, safeVal));
+    const newMax = getMaxSkillLevel(newEw);
+    const clampedSkills = currentSkills.map((lvl) => Math.min(newMax, lvl));
     onUpdate(hero.id, {
-      awakeningStars: clampedStars,
-      awakeningSkill: Math.min(newMaxAwaken, awakeningSkill),
+      exclusiveWeaponLevel: newEw,
+      skills: clampedSkills,
     });
   };
 
-  const updateAwakeningSkill = (rawValue) => {
+  const changeAwakenTier = (delta) => {
+    let totalSteps = awakenStars * 5 + awakenTiers + delta;
+    if (totalSteps < 0) totalSteps = 0;
+    if (totalSteps > 25) totalSteps = 25;
+    const nextStars = Math.floor(totalSteps / 5);
+    const nextTiers = totalSteps % 5;
+    const nextMaxSkill = getMaxAwakeningSkillLevel(nextStars);
+
+    onUpdate(hero.id, {
+      awakeningStars: nextStars,
+      awakeningTiers: nextTiers,
+      awakeningSkill: Math.min(nextMaxSkill, currentAwakenSkill),
+    });
+  };
+
+  const updateAwakenSkill = (rawValue) => {
     const parsed = Number(rawValue);
     const safeVal = Number.isNaN(parsed) ? 1 : parsed;
-    const clamped = Math.max(1, Math.min(maxAwakenSkillLvl, safeVal));
+    const clamped = Math.max(1, Math.min(maxAwakenSkill, safeVal));
     onUpdate(hero.id, { awakeningSkill: clamped });
   };
 
-  const canAwaken = hero.hasExclusiveWeapon && progress.stars >= 5 && ewLevel >= 20;
-
-  const numInputStyle = {
-    width: '34px',
+  const numBoxStyle = {
+    width: '38px',
     textAlign: 'center',
-    backgroundColor: '#0f172a',
-    border: '1px solid #334155',
+    backgroundColor: '#1e293b',
+    border: '1px solid #475569',
     color: '#ffffff',
     borderRadius: '4px',
     padding: '2px 0',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: 'bold',
   };
-      return (
-    <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #334155', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>Skills</span>
-          <span style={{ fontSize: '11px', color: '#64748b' }}>Max Lv. {maxSkillLvl}</span>
-        </div>
+        return (
+    <div style={{ marginTop: '10px', borderTop: '1px solid #334155', paddingTop: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#f8fafc' }}>
+          Skills (Max Lv. {maxSkillLevel})
+        </span>
+        {hero.hasExclusiveWeapon && (
+          <span style={{ fontSize: '10px', color: '#38bdf8' }}>
+            {ewLevel >= 30 ? 'Cap Maxed (40)' : 'Upgrade Weapon to raise cap'}
+          </span>
+        )}
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-          {SKILL_NAMES.map((label, idx) => (
-            <div key={label} style={{ backgroundColor: '#1e293b', padding: '6px 4px', borderRadius: '6px', textAlign: 'center' }}>
-              <div style={{ fontSize: '10px', color: '#cbd5e1', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {label}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+        {hero.skillNames.map((skillName, idx) => {
+          const val = Math.min(maxSkillLevel, currentSkills[idx] || 1);
+          return (
+            <div
+              key={idx}
+              style={{
+                backgroundColor: '#0f172a',
+                padding: '6px 8px',
+                borderRadius: '6px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {idx + 1}. {skillName}
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                 <button
                   type="button"
-                  onClick={() => updateSingleSkill(idx, skills[idx] - 1)}
-                  style={{ ...styles.smallBtn, padding: '4px 5px' }}
+                  onClick={() => updateSkill(idx, val - 1)}
+                  style={{ ...styles.smallBtn, padding: '3px 6px' }}
                 >
                   <Minus size={11} />
                 </button>
                 <input
                   type="number"
                   min="1"
-                  max={maxSkillLvl}
-                  value={skills[idx]}
-                  onChange={(e) => updateSingleSkill(idx, e.target.value)}
-                  style={numInputStyle}
+                  max={maxSkillLevel}
+                  value={val}
+                  onChange={(e) => updateSkill(idx, e.target.value)}
+                  style={numBoxStyle}
                 />
                 <button
                   type="button"
-                  onClick={() => updateSingleSkill(idx, skills[idx] + 1)}
-                  style={{ ...styles.smallBtn, padding: '4px 5px' }}
+                  onClick={() => updateSkill(idx, val + 1)}
+                  style={{ ...styles.smallBtn, padding: '3px 6px' }}
                 >
                   <Plus size={11} />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => updateSkill(idx, maxSkillLevel)}
+                  style={{ ...styles.smallBtn, padding: '3px 6px', backgroundColor: '#2563eb', fontSize: '10px' }}
+                >
+                  MAX
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
       {hero.hasExclusiveWeapon && (
-        <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sword size={15} color={ewLevel > 0 ? '#f97316' : '#64748b'} />
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', color: ewLevel > 0 ? '#fdba74' : '#94a3b8' }}>
-                Exclusive Weapon
+        <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '8px', border: '1px solid #334155', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sword size={15} color="#f97316" />
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fb923c' }}>
+                  {hero.exclusiveWeaponName || 'Exclusive Weapon'}
+                </div>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                  {ewLevel === 0 ? 'Not unlocked (Lv. 0)' : `Unlocked • Skill Cap Lv. ${maxSkillLevel}`}
+                </div>
               </div>
-              <div style={{ fontSize: '10px', color: '#64748b' }}>
-                {progress.stars < 5 ? 'Requires 5★ to unlock' : ewLevel === 0 ? 'Locked (Lv. 0)' : `Level ${ewLevel} / 30`}
-              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button
+                type="button"
+                onClick={() => updateWeaponLevel(ewLevel - 1)}
+                style={{ ...styles.smallBtn, padding: '4px 7px' }}
+              >
+                -1
+              </button>
+              <input
+                type="number"
+                min="0"
+                max="30"
+                value={ewLevel}
+                onChange={(e) => updateWeaponLevel(e.target.value)}
+                style={{ ...numBoxStyle, width: '42px', padding: '3px 0' }}
+              />
+              <button
+                type="button"
+                onClick={() => updateWeaponLevel(ewLevel + 1)}
+                style={{ ...styles.smallBtn, padding: '4px 7px', backgroundColor: '#ea580c' }}
+              >
+                +1
+              </button>
             </div>
           </div>
-
-          {progress.stars >= 5 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button type="button" onClick={() => updateWeaponLevel(ewLevel - 1)} style={styles.smallBtn}>
-                <Minus size={12} />
-              </button>
-              <span style={{ fontSize: '13px', fontWeight: 'bold', minWidth: '22px', textAlign: 'center', color: '#f97316' }}>
-                {ewLevel}
-              </span>
-              <button type="button" onClick={() => updateWeaponLevel(ewLevel + 1)} style={{ ...styles.smallBtn, backgroundColor: '#ea580c' }}>
-                <Plus size={12} />
-              </button>
-            </div>
-          )}
         </div>
       )}
 
       {hero.hasExclusiveWeapon && (
-        <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', opacity: canAwaken ? 1 : 0.55 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: canAwaken ? '8px' : 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Flame size={15} color={awakeningStars > 0 ? '#ef4444' : '#64748b'} />
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: 'bold', color: awakeningStars > 0 ? '#fca5a5' : '#94a3b8' }}>
-                  Hero Awakening
-                </div>
-                {!canAwaken && (
-                  <div style={{ fontSize: '10px', color: '#64748b' }}>
-                    Requires 5★ & Exclusive Weapon Lv. 20
-                  </div>
-                )}
+        <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '8px', border: '1px solid #7f1d1d' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
+                <Flame size={14} color="#ef4444" />
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fca5a5' }}>
+                  Awakening ({awakenStars}★ Red)
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '3px', marginBottom: '4px' }}>
+                {AWAKEN_STARS.map((s) => (
+                  <Star
+                    key={s}
+                    size={14}
+                    fill={s <= awakenStars ? '#ef4444' : 'none'}
+                    color={s <= awakenStars ? '#ef4444' : '#64748b'}
+                  />
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                {AWAKEN_TIERS.map((t) => (
+                  <div
+                    key={t}
+                    style={{
+                      width: '15px',
+                      height: '4px',
+                      borderRadius: '2px',
+                      backgroundColor: awakenStars === 5 || t <= awakenTiers ? '#ef4444' : '#334155',
+                    }}
+                  />
+                ))}
               </div>
             </div>
 
-            {canAwaken && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => updateAwakeningStars(awakeningStars - 1)}
-                  style={{ ...styles.smallBtn, padding: '4px 6px' }}
-                >
-                  -1
-                </button>
-                <div style={{ display: 'flex', gap: '2px', padding: '0 4px' }}>
-                  {STAR_LIST.map((s) => (
-                    <Star
-                      key={s}
-                      size={13}
-                      fill={s <= awakeningStars ? '#ef4444' : 'none'}
-                      color={s <= awakeningStars ? '#ef4444' : '#475569'}
-                    />
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => updateAwakeningStars(awakeningStars + 1)}
-                  style={{ ...styles.smallBtn, padding: '4px 6px', backgroundColor: '#dc2626' }}
-                >
-                  +1
-                </button>
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <button
+                type="button"
+                onClick={() => changeAwakenTier(-1)}
+                style={{ ...styles.smallBtn, padding: '4px 8px' }}
+              >
+                -1
+              </button>
+              <button
+                type="button"
+                onClick={() => changeAwakenTier(1)}
+                style={{ ...styles.smallBtn, padding: '4px 8px', backgroundColor: '#dc2626' }}
+              >
+                +1
+              </button>
+            </div>
           </div>
 
-          {canAwaken && awakeningStars > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1e293b', padding: '6px 8px', borderRadius: '6px' }}>
-              <div>
-                <div style={{ fontSize: '11px', color: '#fca5a5', fontWeight: 'bold' }}>4th Skill (Awakening)</div>
-                <div style={{ fontSize: '9px', color: '#94a3b8' }}>Cap at {awakeningStars}★: Max Lv.{maxAwakenSkillLvl}</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => updateAwakeningSkill(awakeningSkill - 1)}
-                  style={{ ...styles.smallBtn, padding: '4px 6px' }}
-                >
-                  <Minus size={12} />
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  max={maxAwakenSkillLvl}
-                  value={awakeningSkill}
-                  onChange={(e) => updateAwakeningSkill(e.target.value)}
-                  style={{ ...numInputStyle, width: '38px' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => updateAwakeningSkill(awakeningSkill + 1)}
-                  style={{ ...styles.smallBtn, padding: '4px 6px' }}
-                >
-                  <Plus size={12} />
-                </button>
-              </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', borderTop: '1px solid #1e293b', paddingTop: '6px' }}>
+            <span style={{ fontSize: '11px', color: '#cbd5e1' }}>
+              4th Skill (Max Lv. {maxAwakenSkill})
+            </span>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button
+                type="button"
+                onClick={() => updateAwakenSkill(currentAwakenSkill - 1)}
+                style={{ ...styles.smallBtn, padding: '3px 6px' }}
+              >
+                <Minus size={11} />
+              </button>
+              <input
+                type="number"
+                min="1"
+                max={maxAwakenSkill}
+                value={currentAwakenSkill}
+                onChange={(e) => updateAwakenSkill(e.target.value)}
+                style={numBoxStyle}
+              />
+              <button
+                type="button"
+                onClick={() => updateAwakenSkill(currentAwakenSkill + 1)}
+                style={{ ...styles.smallBtn, padding: '3px 6px' }}
+              >
+                <Plus size={11} />
+              </button>
+              <button
+                type="button"
+                onClick={() => updateAwakenSkill(maxAwakenSkill)}
+                style={{ ...styles.smallBtn, padding: '3px 6px', backgroundColor: '#dc2626', fontSize: '10px' }}
+              >
+                MAX
+              </button>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
   );
-                                                   }
-
+                      }
+                         

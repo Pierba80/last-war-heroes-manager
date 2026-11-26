@@ -130,14 +130,16 @@ export default function DroneView({ drone, onUpdateDrone }) {
     });
   };
 
-  const updateChipStars = (slotKey, starVal) => {
-    const nextStar = activeSet[slotKey] === starVal ? starVal - 1 : starVal;
+  // Supports 0-5 Yellow Stars + 6-10 Red Stars
+  const changeChipStars = (slotKey, delta) => {
+    const current = activeSet[slotKey] || 0;
+    const clamped = Math.max(0, Math.min(10, current + delta));
     onUpdateDrone({
       chipSets: {
         ...(d.chipSets || {}),
         [selectedChipSet]: {
           ...activeSet,
-          [slotKey]: Math.max(0, nextStar),
+          [slotKey]: clamped,
         },
       },
     });
@@ -154,7 +156,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
     fontSize: '12px',
     fontWeight: 'bold',
   };
-  return (
+               return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -353,13 +355,13 @@ export default function DroneView({ drone, onUpdateDrone }) {
           </div>
         </div>
       </div>
-              {/* Skill Chips (4 Sets for Squads 1-4) */}
+                      {/* Skill Chips (4 Sets with 0-5 Yellow Stars + 1-5 Red Stars) */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Layers size={14} color="#facc15" /> Skill Chips (Set {selectedChipSet})
           </strong>
-          <span style={{ fontSize: '10px', color: '#94a3b8' }}>Tap ★ to set chip stars</span>
+          <span style={{ fontSize: '10px', color: '#94a3b8' }}>5★ Gold → 5★ Red</span>
         </div>
 
         <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
@@ -377,34 +379,61 @@ export default function DroneView({ drone, onUpdateDrone }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           {CHIP_SLOTS.map((slot) => {
-            const stars = activeSet[slot.key] || 0;
+            const totalStars = activeSet[slot.key] || 0;
+            const redCount = Math.max(0, totalStars - 5);
+            const isRedPhase = totalStars > 5;
+
             return (
               <div
                 key={slot.key}
                 style={{
                   backgroundColor: '#0f172a',
-                  border: `1px solid ${stars > 0 ? slot.color : '#334155'}`,
+                  border: `1px solid ${isRedPhase ? '#ef4444' : totalStars > 0 ? slot.color : '#334155'}`,
                   borderRadius: '8px',
                   padding: '8px',
                 }}
               >
-                <div style={{ fontSize: '10px', fontWeight: 'bold', color: slot.color, marginBottom: '5px' }}>
-                  {slot.label}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                  {CHIP_STAR_LIST.map((s) => (
-                    <Star
-                      key={s}
-                      size={14}
-                      onClick={() => updateChipStars(slot.key, s)}
-                      fill={s <= stars ? '#facc15' : 'none'}
-                      color={s <= stars ? '#facc15' : '#475569'}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  ))}
-                  <span style={{ fontSize: '10px', color: '#cbd5e1', marginLeft: '4px', fontWeight: 'bold' }}>
-                    {stars}★
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 'bold', color: slot.color }}>
+                    {slot.label}
                   </span>
+                  <span style={{ fontSize: '10px', fontWeight: 'bold', color: isRedPhase ? '#ef4444' : '#facc15' }}>
+                    {isRedPhase ? `${redCount}★ Red` : `${totalStars}★`}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => changeChipStars(slot.key, -1)}
+                    style={{ ...styles.smallBtn, padding: '3px 6px' }}
+                  >
+                    -1
+                  </button>
+
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    {CHIP_STAR_LIST.map((s) => {
+                      const isRed = s <= redCount;
+                      const isYellow = !isRed && s <= totalStars;
+                      const starColor = isRed ? '#ef4444' : isYellow ? '#facc15' : '#475569';
+                      return (
+                        <Star
+                          key={s}
+                          size={13}
+                          fill={isRed || isYellow ? starColor : 'none'}
+                          color={starColor}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => changeChipStars(slot.key, 1)}
+                    style={{ ...styles.smallBtn, padding: '3px 6px', backgroundColor: totalStars >= 5 ? '#dc2626' : '#2563eb' }}
+                  >
+                    +1
+                  </button>
                 </div>
               </div>
             );
@@ -505,5 +534,4 @@ export default function DroneView({ drone, onUpdateDrone }) {
       </div>
     </div>
   );
-              }
-        
+}

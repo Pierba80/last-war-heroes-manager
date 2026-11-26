@@ -20,6 +20,14 @@ export const calculateHeroPower = (hero, p = {}) => {
   const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
   const rarityMult = effectiveRarity === 'UR' ? 1.15 : effectiveRarity === 'SSR' ? 0.95 : 0.78;
 
+  const roleMultMap = {
+    Defender: 1.038,
+    Support: 1.015,
+    Control: 0.98,
+    Attack: 0.96,
+  };
+  const roleMult = roleMultMap[hero.role] || 1.0;
+
   const level = Math.max(1, p.level || 1);
   const levelPower = Math.pow(level, 1.75) * 62 * rarityMult;
 
@@ -57,7 +65,7 @@ export const calculateHeroPower = (hero, p = {}) => {
     gearPower += base + lvlBonus + starBonus;
   });
 
-  const rawPower = levelPower + starPower + skillsPower + weaponPower + awakenPower + gearPower;
+  const rawPower = (levelPower + starPower + skillsPower + weaponPower + awakenPower + gearPower) * roleMult;
   return Math.round(rawPower * HERO_POWER_CALIBRATION);
 };
 
@@ -88,3 +96,4 @@ export const calculateOverlordPower = (ov = {}) => {
   const rawOvPower = levelPower + bondPower + trainPower + skillsPower;
   return Math.round(rawOvPower * OVERLORD_POWER_CALIBRATION);
 };
+    

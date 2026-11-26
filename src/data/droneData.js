@@ -146,6 +146,23 @@ export const calculateDronePower = (drone = {}) => {
   const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
   const boostPower = boostLvl * 1_460;
 
+  // Chip Sets bonus (average across active sets)
+  const sets = drone.chipSets || {};
+  let chipStarsSum = 0;
+  [1, 2, 3, 4].forEach((setNum) => {
+    const s = sets[setNum] || { top: 0, center: 0, left: 0, right: 0 };
+    chipStarsSum += (s.top || 0) + (s.center || 0) + (s.left || 0) + (s.right || 0);
+  });
+  const chipPower = chipStarsSum * 38_000;
+
+  const rawDronePower = basePower + compPower + boostPower + chipPower;
+  return Math.round(rawDronePower * 0.89);
+};
+
+
+  const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
+  const boostPower = boostLvl * 1_460;
+
   const rawDronePower = basePower + compPower + boostPower;
   return Math.round(rawDronePower * 0.9438);
 };

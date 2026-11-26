@@ -79,19 +79,17 @@ export default function App() {
   });
 
   const [squadPowers, setSquadPowers] = useState(() => {
-  const saved = localStorage.getItem(SQUAD_POWERS_STORAGE_KEY);
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (e) {
-      return {};
+    const saved = localStorage.getItem(SQUAD_POWERS_STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return {};
+      }
     }
-  }
-  return {};
-});
-  
-
-  const [filterType, setFilterType] = useState('All');
+    return {};
+  });
+      const [filterType, setFilterType] = useState('All');
   const [filterSquad, setFilterSquad] = useState('All');
   const [search, setSearch] = useState('');
 
@@ -112,22 +110,16 @@ export default function App() {
   }, [drone]);
 
   useEffect(() => {
-  localStorage.setItem(SQUAD_POWERS_STORAGE_KEY, JSON.stringify(squadPowers));
-}, [squadPowers]);
+    localStorage.setItem(SQUAD_POWERS_STORAGE_KEY, JSON.stringify(squadPowers));
+  }, [squadPowers]);
 
-const updateSquadPower = (squadNum, val) => {
-  setSquadPowers((prev) => ({
-    ...prev,
-    [squadNum]: val,
-  }));
-};
-  
   useEffect(() => {
     return () => {
       musicPlayer.stop();
     };
   }, []);
-        const handleToggleMusic = async () => {
+
+  const handleToggleMusic = async () => {
     if (musicOn) {
       musicPlayer.stop();
       setMusicOn(false);
@@ -158,14 +150,20 @@ const updateSquadPower = (squadNum, val) => {
     }));
   };
 
+  const updateSquadPower = (squadNum, val) => {
+    setSquadPowers((prev) => ({
+      ...prev,
+      [squadNum]: val,
+    }));
+  };
+
   const handleAssignOverlordSquad = (squadNum) => {
     setOverlord((prev) => ({
       ...prev,
       squad: squadNum,
     }));
   };
-
-  const changeTier = (id, delta) => {
+      const changeTier = (id, delta) => {
     const hero = progress[id];
     let totalTiers = hero.stars * 5 + hero.tiers + delta;
     if (totalTiers < 0) totalTiers = 0;
@@ -248,7 +246,7 @@ const updateSquadPower = (squadNum, val) => {
 
   const handleExport = () => {
     try {
-      const backupPayload = JSON.stringify({ progress, squads, overlord, drone }, null, 2);
+      const backupPayload = JSON.stringify({ progress, squads, overlord, drone, squadPowers }, null, 2);
       const blob = new Blob([backupPayload], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -265,7 +263,7 @@ const updateSquadPower = (squadNum, val) => {
 
   const handleCopyBackup = async () => {
     try {
-      const backupPayload = JSON.stringify({ progress, squads, overlord, drone });
+      const backupPayload = JSON.stringify({ progress, squads, overlord, drone, squadPowers });
       await navigator.clipboard.writeText(backupPayload);
       alert('Backup copied to clipboard! Paste it in your Notes app to keep it safe.');
     } catch (err) {
@@ -282,15 +280,10 @@ const updateSquadPower = (squadNum, val) => {
         const imported = JSON.parse(e.target.result);
         if (imported.progress) {
           setProgress({ ...createDefaultProgress(), ...imported.progress });
-          if (imported.squads) {
-            setSquads({ ...DEFAULT_SQUADS, ...imported.squads });
-          }
-          if (imported.overlord) {
-            setOverlord({ ...createDefaultOverlord(), ...imported.overlord });
-          }
-          if (imported.drone) {
-            setDrone({ ...createDefaultDrone(), ...imported.drone });
-          }
+          if (imported.squads) setSquads({ ...DEFAULT_SQUADS, ...imported.squads });
+          if (imported.overlord) setOverlord({ ...createDefaultOverlord(), ...imported.overlord });
+          if (imported.drone) setDrone({ ...createDefaultDrone(), ...imported.drone });
+          if (imported.squadPowers) setSquadPowers(imported.squadPowers);
         } else {
           setProgress({ ...createDefaultProgress(), ...imported });
         }
@@ -302,7 +295,7 @@ const updateSquadPower = (squadNum, val) => {
     };
     reader.readAsText(file);
   };
-                                  const filteredHeroes = INITIAL_HEROES.filter((hero) => {
+      const filteredHeroes = INITIAL_HEROES.filter((hero) => {
     const p = progress[hero.id];
     if (filterType !== 'All' && hero.type !== filterType) return false;
     if (filterSquad !== 'All' && String(p.squad) !== filterSquad) return false;
@@ -472,6 +465,8 @@ const updateSquadPower = (squadNum, val) => {
           squads={squads}
           overlord={overlord}
           drone={drone}
+          squadPowers={squadPowers}
+          onUpdateSquadPower={updateSquadPower}
           onAssignSlot={handleAssignSlot}
           onClearSlot={handleClearSlot}
           onResetSquad={handleResetSquad}
@@ -484,5 +479,4 @@ const updateSquadPower = (squadNum, val) => {
       )}
     </div>
   );
-              }
-            
+      }

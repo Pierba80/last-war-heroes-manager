@@ -70,7 +70,12 @@ export const calculateHeroPower = (hero, p = {}) => {
 };
 
 export const calculateOverlordPower = (ov = {}) => {
+  if (ov.manualPowerM !== undefined && ov.manualPowerM !== null && ov.manualPowerM !== '' && Number(ov.manualPowerM) > 0) {
+    return Math.round(Number(ov.manualPowerM) * 1_000_000);
+  }
+
   if (!ov.unlocked) return 0;
+  
 
   const level = Math.max(0, ov.level || 0);
   const levelPower = 150_000 + Math.pow(level, 1.55) * 9_200;

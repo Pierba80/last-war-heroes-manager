@@ -29,7 +29,6 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
   const bondInfo = getBondInfo(bondRank);
   const maxTrainCap = bondInfo.maxTrain;
 
-  // Level 0-60: 1★ at Lv.0, 2★ at Lv.10, ..., 6★ at Lv.50, 7★ at Lv.60
   const currentLvl = Math.min(60, Math.max(0, ov.level ?? 1));
   const autoStars = Math.min(7, Math.floor(currentLvl / 10) + 1);
   const autoBars = currentLvl >= 60 ? 10 : currentLvl % 10;
@@ -39,6 +38,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     onUpdateOverlord({
       ...createDefaultOverlord(),
       avatar: ov.avatar,
+      manualPowerM: '',
     });
   };
 
@@ -194,13 +194,22 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
         </div>
 
         <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '6px' }}>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#f8fafc' }}>
                 Overlord Level
               </div>
-              <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                Starts at 1★ • 7★ at Lv. 60 (Max)
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                <span style={{ fontSize: '11px', color: '#fb923c' }}>Real M:</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="Auto"
+                  value={ov.manualPowerM ?? ''}
+                  onChange={(e) => onUpdateOverlord({ manualPowerM: e.target.value })}
+                  style={{ ...numInputStyle, width: '58px', padding: '2px 0', fontSize: '12px', borderColor: ov.manualPowerM ? '#fb923c' : '#475569' }}
+                />
               </div>
             </div>
 
@@ -241,7 +250,6 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
         </div>
       </div>
 
-      {/* 12-Color Bond Rating (I-XII) + Roman Sub-Levels (I-X) = 120 Total */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div
           style={{
@@ -472,4 +480,4 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       </div>
     </div>
   );
-}
+                      }

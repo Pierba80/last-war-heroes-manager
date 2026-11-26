@@ -5,6 +5,7 @@ import { INITIAL_HEROES } from '../data/heroesData';
 import HeroAvatar from './HeroAvatar';
 import HeroPickerModal from './HeroPickerModal';
 import SquadExportCard from './SquadExportCard';
+import { calculateHeroPower, calculateOverlordPower, formatPower } from '../utils/powerCalculator';
 import { styles } from '../styles';
 
 const SQUAD_TABS = Array.from({ length: 4 }, (_, i) => i + 1);
@@ -77,6 +78,14 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
   const synergy = getSquadSynergy(assignedIds);
   const hasOverlord = overlord && overlord.squad === selectedSquad;
 
+  const heroesBasePower = assignedIds.reduce((sum, id) => {
+    const h = INITIAL_HEROES.find((item) => item.id === id);
+    return h ? sum + calculateHeroPower(h, progress[id]) : sum;
+  }, 0);
+  const ovPower = hasOverlord ? calculateOverlordPower(overlord) : 0;
+  const synergyMultiplier = 1 + synergy.bonus / 100;
+  const totalSquadPower = Math.round(heroesBasePower * synergyMultiplier + ovPower);
+
   const handleResetCurrentSquad = () => {
     if (assignedIds.length === 0 && !hasOverlord) return;
     if (window.confirm(`Clear all heroes from Squad ${selectedSquad}?`)) {
@@ -128,6 +137,7 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
     const heroId = currentSquadSlots[slot.key];
     const hero = INITIAL_HEROES.find((h) => h.id === heroId);
     const p = hero ? progress[hero.id] || {} : null;
+    const slotPower = hero ? calculateHeroPower(hero, p) : 0;
 
     return (
       <div
@@ -144,7 +154,7 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
           textAlign: 'center',
           cursor: 'pointer',
           position: 'relative',
-          minHeight: '115px',
+          minHeight: '124px',
           justifyContent: 'center',
         }}
       >
@@ -196,6 +206,10 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
             <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px' }}>
               Lv.{p.level || 1} • {p.stars || 0}★
             </div>
+
+            <div style={{ fontSize: '10px', color: '#fb923c', fontWeight: 'bold', marginTop: '2px' }}>
+              ⚡ {formatPower(slotPower)}
+            </div>
           </>
         ) : (
           <div style={{ color: '#64748b', fontSize: '11px', padding: '12px 4px' }}>
@@ -230,6 +244,7 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
         ))}
       </div>
 
+      {/* Total Squad Power + Synergy Banner */}
       <div
         style={{
           backgroundColor: '#1e293b',
@@ -244,14 +259,17 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-            <Sparkles size={15} color={synergy.bonus > 0 ? '#facc15' : '#64748b'} />
-            <strong style={{ fontSize: '13px', color: synergy.bonus > 0 ? '#facc15' : '#cbd5e1' }}>
+          <div style={{ fontSize: '14px', fontWeight: '900', color: '#fb923c', marginBottom: '3px' }}>
+            ⚡ Total Squad Power: {formatPower(totalSquadPower)}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Sparkles size={13} color={synergy.bonus > 0 ? '#facc15' : '#64748b'} />
+            <span style={{ fontSize: '11px', fontWeight: 'bold', color: synergy.bonus > 0 ? '#facc15' : '#cbd5e1' }}>
               {synergy.label}
-            </strong>
+            </span>
           </div>
           {synergy.counter && (
-            <div style={{ fontSize: '11px', color: '#4ade80', marginLeft: '21px' }}>
+            <div style={{ fontSize: '10px', color: '#4ade80', marginLeft: '18px' }}>
               {synergy.counter}
             </div>
           )}
@@ -304,16 +322,15 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
               editable={false}
             />
             <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Crown size={13} color="#facc15" />
                 <strong style={{ fontSize: '13px', color: '#fca5a5' }}>
-                  Overlord • G{overlord.tier || 1} Lv.{overlord.level || 1}
+                  Overlord • Lv.{overlord.level || 1} ({formatPower(ovPower)})
                 </strong>
               </div>
               <div style={{ fontSize: '10px', color: '#cbd5e1' }}>
                 ATK/DEF/PS: {overlord.training?.atk || 1}/{overlord.training?.def || 1}/{overlord.training?.hp || 1} • Skills: {overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.brutal || 1}/{overlord.skills?.instinct || 1}/{overlord.skills?.command || 1}
               </div>
-          
             </div>
           </div>
 
@@ -400,4 +417,5 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
       )}
     </div>
   );
-}
+    }
+            

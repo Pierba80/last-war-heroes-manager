@@ -10,6 +10,7 @@ import {
   calculateOverlordResources,
 } from '../data/overlordData';
 import HeroAvatar from './HeroAvatar';
+import { calculateOverlordPower, formatPower } from '../utils/powerCalculator';
 import { styles } from '../styles';
 
 const SQUAD_OPTIONS = Array.from({ length: 4 }, (_, i) => i + 1);
@@ -20,6 +21,7 @@ const SKILL_STAR_LIST = Array.from({ length: 6 }, (_, i) => i + 1);
 export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverlordSquad }) {
   const ov = { ...createDefaultOverlord(), ...(overlord || {}) };
   const res = calculateOverlordResources(ov);
+  const overlordPower = calculateOverlordPower(ov);
   const bondRank = Math.min(12, Math.max(1, ov.bondRank || 1));
   const bondSub = Math.min(10, Math.max(0, ov.bondProgress || 0));
   const bondSubRoman = bondSub === 0 ? '0' : SUB_ROMAN.at(bondSub - 1);
@@ -27,9 +29,10 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
   const bondInfo = getBondInfo(bondRank);
   const maxTrainCap = bondInfo.maxTrain;
 
-  const currentLvl = Math.min(80, Math.max(0, ov.level ?? 1));
+  // Level 0-60: 1★ at Lv.0, 2★ at Lv.10, ..., 6★ at Lv.50, 7★ at Lv.60
+  const currentLvl = Math.min(60, Math.max(0, ov.level ?? 1));
   const autoStars = Math.min(7, Math.floor(currentLvl / 10) + 1);
-  const autoBars = currentLvl === 0 ? 0 : currentLvl % 10 === 0 ? 10 : currentLvl % 10;
+  const autoBars = currentLvl >= 60 ? 10 : currentLvl % 10;
 
   const handleReset = () => {
     if (!window.confirm('Reset all Overlord stats, bond and skills?')) return;
@@ -42,7 +45,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
   const updateMainLevel = (rawVal) => {
     const parsed = Number(rawVal);
     const safe = Number.isNaN(parsed) ? 0 : parsed;
-    const clamped = Math.max(0, Math.min(80, safe));
+    const clamped = Math.max(0, Math.min(60, safe));
     onUpdateOverlord({
       level: clamped,
       tier: Math.min(7, Math.floor(clamped / 10) + 1),
@@ -122,7 +125,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     fontSize: '13px',
     fontWeight: 'bold',
   };
-  return (
+      return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -158,7 +161,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
                   />
                 ))}
                 <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '5px', fontWeight: 'bold' }}>
-                  Grade {autoStars}/7
+                  Grade {autoStars}/7 • <span style={{ color: '#fb923c' }}>⚡ {formatPower(overlordPower)}</span>
                 </span>
               </div>
             </div>
@@ -197,7 +200,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
                 Overlord Level
               </div>
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                Grade 1–7 stars • Max Lv. 80
+                Starts at 1★ • 7★ at Lv. 60 (Max)
               </div>
             </div>
 
@@ -208,7 +211,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
               <input
                 type="number"
                 min="0"
-                max="80"
+                max="60"
                 value={currentLvl}
                 onChange={(e) => updateMainLevel(e.target.value)}
                 style={numInputStyle}
@@ -232,7 +235,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
               />
             ))}
             <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '6px', fontWeight: 'bold', minWidth: '30px' }}>
-              {currentLvl >= 80 ? 'MAX' : `${autoBars}/10`}
+              {currentLvl >= 60 ? 'MAX' : `${autoBars}/10`}
             </span>
           </div>
         </div>
@@ -310,7 +313,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
             ))}
           </div>
         </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {OVERLORD_STATS.map((st) => {
             const val = (ov.training && ov.training[st.key]) || 1;
             return (
@@ -469,4 +472,4 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       </div>
     </div>
   );
-                }
+}

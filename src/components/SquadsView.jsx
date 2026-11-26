@@ -6,6 +6,7 @@ import HeroAvatar from './HeroAvatar';
 import HeroPickerModal from './HeroPickerModal';
 import SquadExportCard from './SquadExportCard';
 import { calculateHeroPower, calculateOverlordPower, formatPower } from '../utils/powerCalculator';
+import { calculateDronePower } from '../data/droneData';
 import { styles } from '../styles';
 
 const SQUAD_TABS = Array.from({ length: 4 }, (_, i) => i + 1);
@@ -67,7 +68,7 @@ const getSquadSynergy = (heroIds) => {
   };
 };
 
-export default function SquadsView({ progress, squads, overlord, onAssignSlot, onClearSlot, onResetSquad, onRemoveOverlord }) {
+export default function SquadsView({ progress, squads, overlord, drone, onAssignSlot, onClearSlot, onResetSquad, onRemoveOverlord }) {
   const [selectedSquad, setSelectedSquad] = useState(1);
   const [pickingSlot, setPickingSlot] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -83,6 +84,9 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
     return h ? sum + calculateHeroPower(h, progress[id]) : sum;
   }, 0);
   const ovPower = hasOverlord ? calculateOverlordPower(overlord) : 0;
+  const dronePower = drone ? calculateDronePower(drone) : 0;
+  const synergyMultiplier = 1 + synergy.bonus / 100;
+  const totalSquadPower = Math.round(heroesBasePower * synergyMultiplier + ovPower + dronePower);
   const synergyMultiplier = 1 + synergy.bonus / 100;
   const totalSquadPower = Math.round(heroesBasePower * synergyMultiplier + ovPower);
 
@@ -400,6 +404,7 @@ export default function SquadsView({ progress, squads, overlord, onAssignSlot, o
         squads={squads}
         progress={progress}
         overlord={overlord}
+        drone={drone}
         getSynergyFn={getSquadSynergy}
       />
 

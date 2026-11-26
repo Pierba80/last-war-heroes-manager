@@ -1,29 +1,33 @@
 import React, { useState } from 'react';
-import { Star, Shield, Plane, Rocket, Plus, Minus, Sparkles, Lock, Unlock, Sword, Wrench, RotateCcw, X } from 'lucide-react';
+import { Shield, Plane, Rocket, Star, Lock, Unlock, ChevronDown, ChevronUp, Sparkles, RotateCcw } from 'lucide-react';
 import { calculateShardsNeeded } from '../data/heroesData';
+import HeroAvatar from './HeroAvatar';
 import HeroSkillsSection from './HeroSkillsSection';
 import HeroGearSection from './HeroGearSection';
-import HeroAvatar from './HeroAvatar';
+import { calculateHeroPower, formatPower } from '../utils/powerCalculator';
 import { styles } from '../styles';
 
-const STAR_NUMBERS = Array.from({ length: 5 }, (_, i) => i + 1);
+const STAR_INDEXES = Array.from({ length: 5 }, (_, i) => i + 1);
+const TIER_INDEXES = Array.from({ length: 5 }, (_, i) => i + 1);
 
 export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRemoveFromSquad }) {
-  const [activeTab, setActiveTab] = useState('none');
-  const shards = calculateShardsNeeded(progress.stars, progress.tiers, progress.isPromotedUR);
-
-  const toggleTab = (tab) => {
-    setActiveTab((prev) => (prev === tab ? 'none' : tab));
-  };
+  const [expanded, setExpanded] = useState(false);
+  const p = progress;
+  const heroPower = calculateHeroPower(hero, p);
+  const shards = calculateShardsNeeded(p.stars, p.tiers, p.isPromotedUR);
 
   const handleResetHero = () => {
     if (!window.confirm(`Reset all stats, skills and gear for ${hero.name}?`)) return;
+    if (onRemoveFromSquad) {
+      onRemoveFromSquad(hero.id);
+    }
     onUpdate(hero.id, {
-      unlocked: hero.rarity !== 'UR',
+      unlocked: false,
       isPromotedUR: false,
       level: 1,
       stars: 0,
       tiers: 0,
+      squad: null,
       skills: Array(3).fill(1),
       exclusiveWeaponLevel: 0,
       awakeningStars: 0,
@@ -43,47 +47,25 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
     return <Rocket size={15} color="#f87171" />;
   };
 
-  const getRarityBorder = () => {
-    const effectiveRarity = progress.isPromotedUR ? 'UR' : hero.rarity;
+  const getRarityColor = (rarity, isPromoted) => {
+    const effectiveRarity = isPromoted ? 'UR' : rarity;
     if (effectiveRarity === 'UR') return '#eab308';
     if (effectiveRarity === 'SSR') return '#a855f7';
     return '#3b82f6';
   };
 
-  const tabBtnStyle = (isActive) => ({
-    flex: 1,
-    padding: '6px 8px',
-    backgroundColor: isActive ? '#334155' : 'transparent',
-    border: '1px solid #334155',
-    borderRadius: '6px',
-    color: isActive ? '#facc15' : '#94a3b8',
-    fontSize: '11px',
-    fontWeight: 'bold',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '5px',
-    cursor: 'pointer',
-  });
+  const borderColor = getRarityColor(hero.rarity, p.isPromotedUR);
 
   return (
-    <div
-      style={{
-        backgroundColor: '#1e293b',
-        borderLeft: `5px solid ${getRarityBorder()}`,
-        borderRadius: '10px',
-        padding: '12px',
-        opacity: progress.unlocked ? 1 : 0.6,
-      }}
-    >
-      {/* Row 1: Avatar, Name, Role, Squad, Reset, Unlock */}
+    <div style={{ ...styles.card, borderLeft: `5px solid ${borderColor}`, opacity: p.unlocked ? 1 : 0.65 }}>
+      {/* Top Row: Avatar + Name + Power + Squad Badge + Lock */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <HeroAvatar
             hero={hero}
-            avatar={progress.avatar}
-            borderColor={getRarityBorder()}
-            size={46}
+            avatar={p.avatar}
+            borderColor={borderColor}
+            size={48}
             editable={true}
             onChangeAvatar={(imgData) => onUpdate(hero.id, { avatar: imgData })}
           />
@@ -94,168 +76,162 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
                 {hero.name}
               </strong>
             </div>
-            <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#334155', color: '#cbd5e1', display: 'inline-block', marginTop: '3px' }}>
-              {hero.role}
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+              {hero.role} {p.isPromotedUR && '(Promoted UR)'} •{' '}
+              <strong style={{ color: '#fb923c' }}>⚡ {formatPower(heroPower)}</strong>
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {progress.squad && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onRemoveFromSquad) {
-                  onRemoveFromSquad(hero.id);
-                } else {
-                  onUpdate(hero.id, { squad: null });
-                }
-              }}
-              title="Remove from Squad"
-              style={{
-                fontSize: '12px',
-                padding: '6px 10px',
-                borderRadius: '8px',
-                backgroundColor: '#0f172a',
-                border: '1px solid #facc15',
-                color: '#facc15',
-                fontWeight: 'bold',
-                marginRight: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                cursor: 'pointer',
-              }}
-            >
-              Squad {progress.squad} <X size={13} />
-            </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          {p.squad && (
+            <span style={{ fontSize: '11px', padding: '2px 7px', borderRadius: '4px', backgroundColor: '#334155', color: '#facc15', fontWeight: 'bold' }}>
+              S{p.squad}
+            </span>
           )}
 
           <button
             type="button"
             onClick={handleResetHero}
-            title="Reset Hero Setup"
-            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}
+            title={`Reset ${hero.name}`}
+            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '3px' }}
           >
             <RotateCcw size={15} />
           </button>
 
           <button
             type="button"
-            onClick={() => onUpdate(hero.id, { unlocked: !progress.unlocked })}
-            title={progress.unlocked ? 'Unlocked' : 'Locked'}
-            style={{ background: 'none', border: 'none', color: progress.unlocked ? '#4ade80' : '#94a3b8', cursor: 'pointer', padding: '4px' }}
+            onClick={() => onUpdate(hero.id, { unlocked: !p.unlocked })}
+            title={p.unlocked ? 'Unlocked' : 'Locked'}
+            style={{ background: 'none', border: 'none', color: p.unlocked ? '#4ade80' : '#94a3b8', cursor: 'pointer', padding: '3px' }}
           >
-            {progress.unlocked ? <Unlock size={16} /> : <Lock size={16} />}
+            {p.unlocked ? <Unlock size={17} /> : <Lock size={17} />}
           </button>
         </div>
       </div>
-
-      {/* Row 2: Level & UR Promotion */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '13px', color: '#94a3b8' }}>Level:</span>
-          <button type="button" onClick={() => onUpdate(hero.id, { level: Math.max(1, progress.level - 1) })} style={styles.smallBtn}>
-            <Minus size={14} />
-          </button>
-          <input
-            type="number"
-            min="1"
-            max="175"
-            value={progress.level}
-            onChange={(e) => onUpdate(hero.id, { level: Math.max(1, Number(e.target.value)) })}
-            style={{
-              width: '48px',
-              textAlign: 'center',
-              backgroundColor: '#0f172a',
-              border: '1px solid #334155',
-              color: '#fff',
-              borderRadius: '6px',
-              padding: '4px',
-              fontWeight: 'bold',
-            }}
-          />
-          <button type="button" onClick={() => onUpdate(hero.id, { level: progress.level + 1 })} style={styles.smallBtn}>
-            <Plus size={14} />
-          </button>
-        </div>
-
-        {hero.canPromoteUR && (
+                        {/* SSR -> UR Promotion Toggle */}
+      {hero.canPromoteUR && (
+        <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', padding: '6px 10px', borderRadius: '8px' }}>
+          <span style={{ fontSize: '11px', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Sparkles size={13} color="#eab308" /> UR Promotion (Season)
+          </span>
           <button
             type="button"
-            onClick={() => onUpdate(hero.id, { isPromotedUR: !progress.isPromotedUR })}
+            onClick={() => onUpdate(hero.id, { isPromotedUR: !p.isPromotedUR })}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
+              padding: '3px 8px',
+              borderRadius: '5px',
+              border: 'none',
               fontSize: '11px',
-              padding: '4px 8px',
-              borderRadius: '6px',
-              border: '1px solid #eab308',
-              backgroundColor: progress.isPromotedUR ? '#eab308' : 'transparent',
-              color: progress.isPromotedUR ? '#0f172a' : '#eab308',
               fontWeight: 'bold',
               cursor: 'pointer',
+              backgroundColor: p.isPromotedUR ? '#eab308' : '#334155',
+              color: p.isPromotedUR ? '#0f172a' : '#cbd5e1',
             }}
           >
-            <Sparkles size={12} />
-            {progress.isPromotedUR ? 'Promoted UR' : `Promote UR (S${hero.promotionSeason})`}
+            {p.isPromotedUR ? 'UR Active' : 'Promote to UR'}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Row 3: Stars, Tiers & Shards */}
-      <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Stars & Tiers Control */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', marginBottom: '10px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '4px' }}>
-            {STAR_NUMBERS.map((s) => (
+          <div style={{ display: 'flex', gap: '3px', marginBottom: '4px' }}>
+            {STAR_INDEXES.map((s) => (
               <Star
                 key={s}
-                size={16}
-                fill={s <= progress.stars ? '#facc15' : 'none'}
-                color={s <= progress.stars ? '#facc15' : '#475569'}
+                size={15}
+                fill={s <= p.stars ? '#facc15' : 'none'}
+                color={s <= p.stars ? '#facc15' : '#475569'}
               />
             ))}
-            <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: '6px' }}>
-              ({progress.tiers}/5 tiers)
-            </span>
           </div>
-
-          <div style={{ fontSize: '11px', color: '#cbd5e1' }}>
-            {progress.stars >= 5 ? (
-              <span style={{ color: '#4ade80' }}>★ Max Stars Reached!</span>
-            ) : (
-              <>
-                Next star: <strong style={{ color: '#facc15' }}>{shards.nextStar}</strong> shards • Max: <strong>{shards.maxStars}</strong>
-              </>
-            )}
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {TIER_INDEXES.map((t) => (
+              <div
+                key={t}
+                style={{
+                  width: '18px',
+                  height: '5px',
+                  borderRadius: '2px',
+                  backgroundColor: p.stars === 5 || t <= p.tiers ? '#38bdf8' : '#334155',
+                }}
+              />
+            ))}
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '6px' }}>
-          <button type="button" onClick={() => onChangeTier(hero.id, -1)} style={styles.smallBtn}>-1</button>
-          <button type="button" onClick={() => onChangeTier(hero.id, 1)} style={{ ...styles.smallBtn, backgroundColor: '#2563eb' }}>+1</button>
+          <button type="button" onClick={() => onChangeTier(hero.id, -1)} style={styles.smallBtn}>
+            -1
+          </button>
+          <button type="button" onClick={() => onChangeTier(hero.id, 1)} style={{ ...styles.smallBtn, backgroundColor: '#2563eb' }}>
+            +1
+          </button>
         </div>
       </div>
 
-      {/* Toggle Tabs: Skills & Gear */}
-      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-        <button type="button" onClick={() => toggleTab('skills')} style={tabBtnStyle(activeTab === 'skills')}>
-          <Sword size={13} /> Skills & Weapon
-        </button>
-        <button type="button" onClick={() => toggleTab('gear')} style={tabBtnStyle(activeTab === 'gear')}>
-          <Wrench size={13} /> Gear (4 Slots)
-        </button>
+      {/* Level & Shards Summary */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#cbd5e1' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>EXP Lv:</span>
+          <input
+            type="number"
+            min="1"
+            max="200"
+            value={p.level}
+            onChange={(e) => onUpdate(hero.id, { level: Math.max(1, Number(e.target.value)) })}
+            style={styles.numInput}
+          />
+        </div>
+
+        <div style={{ textAlign: 'right' }}>
+          {p.stars < 5 ? (
+            <>
+              <div>Next ★: <strong style={{ color: '#38bdf8' }}>{shards.nextStar}</strong> shards</div>
+              <div>To 5★: <strong style={{ color: '#facc15' }}>{shards.maxStars}</strong> shards</div>
+            </>
+          ) : (
+            <strong style={{ color: '#4ade80' }}>MAX 5 STARS</strong>
+          )}
+        </div>
       </div>
 
-      {activeTab === 'skills' && (
-        <HeroSkillsSection hero={hero} progress={progress} onUpdate={onUpdate} />
-      )}
+      {/* Expandable Details: Skills, Exclusive Weapon, Awakening & Gear */}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          width: '100%',
+          marginTop: '10px',
+          padding: '7px',
+          backgroundColor: '#0f172a',
+          border: '1px solid #334155',
+          borderRadius: '6px',
+          color: '#cbd5e1',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px',
+          cursor: 'pointer',
+        }}
+      >
+        {expanded ? (
+          <>Hide Skills, Weapon & Gear <ChevronUp size={15} /></>
+        ) : (
+          <>Edit Skills, Weapon & Gear <ChevronDown size={15} /></>
+        )}
+      </button>
 
-      {activeTab === 'gear' && (
-        <HeroGearSection hero={hero} progress={progress} onUpdate={onUpdate} />
+      {expanded && (
+        <>
+          <HeroSkillsSection hero={hero} progress={p} onUpdate={onUpdate} />
+          <HeroGearSection hero={hero} progress={p} onUpdate={onUpdate} />
+        </>
       )}
     </div>
   );
-}
+          }

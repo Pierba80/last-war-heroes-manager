@@ -44,8 +44,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       manualPowerM: '',
     });
   };
-
-  const updateMainLevel = (rawVal) => {
+    const updateMainLevel = (rawVal) => {
     const parsed = Number(rawVal);
     const safe = Number.isNaN(parsed) ? 0 : parsed;
     const clamped = Math.max(0, Math.min(60, safe));
@@ -128,64 +127,48 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     fontSize: '13px',
     fontWeight: 'bold',
   };
-  return (
+        return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
           backgroundColor: '#1e293b',
-          borderLeft: `5px solid ${model.color}`,
+          borderLeft: '5px solid #ef4444',
           borderRadius: '10px',
           padding: '12px',
+          opacity: ov.unlocked ? 1 : 0.75,
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              title="Tap to change Drone stage image"
-              style={{
-                width: '58px',
-                height: '58px',
-                minWidth: '58px',
-                borderRadius: '10px',
-                border: `2px solid ${model.color}`,
-                backgroundColor: '#0f172a',
-                overflow: 'hidden',
-                position: 'relative',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <img
-                src={currentAvatar}
-                alt={model.name}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-              <Camera size={13} color="#cbd5e1" style={{ position: 'absolute', bottom: '2px', right: '2px', opacity: 0.8 }} />
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleUploadStageImage}
-                style={{ display: 'none' }}
-              />
-            </div>
-
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Plane size={15} color={model.color} />
-                <strong style={{ fontSize: '15px', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {model.code} "{model.name}"
-                </strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <HeroAvatar
+              hero={{ id: 'overlord', name: 'Overlord' }}
+              avatar={ov.avatar}
+              borderColor="#ef4444"
+              size={52}
+              editable={true}
+              onChangeAvatar={(imgData) => onUpdateOverlord({ avatar: imgData })}
+            />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Crown size={16} color="#facc15" />
+                <strong style={{ fontSize: '16px', color: '#f8fafc' }}>Overlord (Gorilla)</strong>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '4px', pointerEvents: 'none' }}>
+                {TIER_STARS.map((t) => (
+                  <Star
+                    key={t}
+                    size={14}
+                    fill={t <= autoStars ? '#facc15' : 'none'}
+                    color={t <= autoStars ? '#facc15' : '#475569'}
+                  />
+                ))}
+                <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '4px', fontWeight: 'bold' }}>
+                  {autoStars}/7
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                 <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fb923c' }}>
-                  ⚡ {formatPower(dronePower)}
+                  ⚡ {formatPower(overlordPower)}
                 </span>
                 <button
                   type="button"
@@ -207,32 +190,20 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
                   <Edit3 size={10} /> Set Power
                 </button>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '3px' }}>
-                {ABILITY_STARS.map((s) => (
-                  <Star
-                    key={s}
-                    size={12}
-                    fill={s <= abilityStars ? '#facc15' : 'none'}
-                    color={s <= abilityStars ? '#facc15' : '#475569'}
-                  />
-                ))}
-                <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: '4px' }}>
-                  Skill {abilityStars}★
-                </span>
-              </div>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleReset}
-            title="Reset Drone"
-            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}
-          >
-            <RotateCcw size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button type="button" onClick={handleReset} title="Reset Overlord" style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}>
+              <RotateCcw size={16} />
+            </button>
+            <button type="button" onClick={() => onUpdateOverlord({ unlocked: !ov.unlocked })} style={{ background: 'none', border: 'none', color: ov.unlocked ? '#4ade80' : '#94a3b8', cursor: 'pointer', padding: '4px' }}>
+              {ov.unlocked ? <Unlock size={17} /> : <Lock size={17} />}
+            </button>
+          </div>
         </div>
-                        {editingPower && (
+
+        {editingPower && (
           <div
             style={{
               backgroundColor: '#0f172a',
@@ -253,14 +224,14 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
               <input
                 type="text"
                 inputMode="decimal"
-                placeholder="e.g. 14.78"
-                value={d.manualPowerM ?? ''}
-                onChange={(e) => onUpdateDrone({ manualPowerM: e.target.value.replace(',', '.') })}
+                placeholder="e.g. 5.06"
+                value={ov.manualPowerM ?? ''}
+                onChange={(e) => onUpdateOverlord({ manualPowerM: e.target.value.replace(',', '.') })}
                 style={{ ...numInputStyle, width: '75px', borderColor: '#fb923c' }}
               />
               <button
                 type="button"
-                onClick={() => onUpdateDrone({ manualPowerM: '' })}
+                onClick={() => onUpdateOverlord({ manualPowerM: '' })}
                 style={{ ...styles.smallBtn, fontSize: '10px', padding: '5px 7px' }}
               >
                 Auto
@@ -276,121 +247,70 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           </div>
         )}
 
-        <div
-          style={{
-            backgroundColor: '#0f172a',
-            border: `1px solid ${model.color}`,
-            borderRadius: '8px',
-            padding: '7px 10px',
-            marginBottom: '10px',
-            fontSize: '11px',
-            color: '#cbd5e1',
-          }}
-        >
-          <strong style={{ color: model.color }}>Skin Bonus Active:</strong> {model.bonus}
+        <div style={{ backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', marginBottom: '10px' }}>
+          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Shield size={13} color="#facc15" /> Assigned Squad:
+          </div>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button type="button" onClick={() => onAssignOverlordSquad(null)} style={{ ...styles.filterBtn(ov.squad === null), flex: 1, textAlign: 'center', padding: '6px 2px', fontSize: '11px' }}>
+              None
+            </button>
+            {SQUAD_OPTIONS.map((num) => (
+              <button key={num} type="button" onClick={() => onAssignOverlordSquad(num)} style={{ ...styles.filterBtn(ov.squad === num), flex: 1, textAlign: 'center', padding: '6px 2px', fontSize: '11px' }}>
+                S{num}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#f8fafc' }}>
-                Drone Level
+                Overlord Level
               </div>
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                {nextModel ? `Next skin: ${nextModel.code} at Lv.${nextModel.minLevel}` : 'Max Skin Unlocked (TD-6)'}
+                Starts at 1★ • 7★ at Lv. 60 (Max)
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <button type="button" onClick={() => commitLevel((d.level || 1) - 1)} style={styles.smallBtn}>
-                <Minus size={13} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button type="button" onClick={() => updateMainLevel(currentLvl - 1)} style={styles.smallBtn}>
+                <Minus size={14} />
               </button>
               <input
                 type="number"
-                min="1"
-                max="300"
-                value={levelText}
-                onChange={(e) => handleLevelInput(e.target.value)}
-                onBlur={(e) => commitLevel(e.target.value)}
-                style={{ ...numInputStyle, width: '54px', fontSize: '13px' }}
+                min="0"
+                max="60"
+                value={currentLvl}
+                onChange={(e) => updateMainLevel(e.target.value)}
+                style={numInputStyle}
               />
-              <button type="button" onClick={() => commitLevel((d.level || 1) + 1)} style={{ ...styles.smallBtn, backgroundColor: '#2563eb' }}>
-                <Plus size={13} />
+              <button type="button" onClick={() => updateMainLevel(currentLvl + 1)} style={{ ...styles.smallBtn, backgroundColor: '#dc2626' }}>
+                <Plus size={14} />
               </button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #1e293b', paddingTop: '8px' }}>
-            <span style={{ fontSize: '11px', color: '#cbd5e1' }}>
-              Critical Boost: <strong style={{ color: '#facc15' }}>Stage {d.critStage || 1}/5</strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', pointerEvents: 'none' }}>
+            {SUB_BARS.map((bar) => (
+              <div
+                key={bar}
+                style={{
+                  flex: 1,
+                  height: '7px',
+                  borderRadius: '2px',
+                  backgroundColor: bar <= autoBars ? '#facc15' : '#334155',
+                }}
+              />
+            ))}
+            <span style={{ fontSize: '10px', color: '#facc15', marginLeft: '6px', fontWeight: 'bold', minWidth: '30px' }}>
+              {currentLvl >= 60 ? 'MAX' : `${autoBars}/10`}
             </span>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {CRIT_STAGES.map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => onUpdateDrone({ critStage: st })}
-                  style={{
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    border: 'none',
-                    fontSize: '11px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    backgroundColor: (d.critStage || 1) === st ? '#eab308' : '#1e293b',
-                    color: (d.critStage || 1) === st ? '#0f172a' : '#94a3b8',
-                  }}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
-
-      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
-        <div
-          style={{
-            backgroundColor: '#0f172a',
-            border: `1px solid ${boostInfo.color}`,
-            borderRadius: '8px',
-            padding: '10px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: boostInfo.color, fontSize: '13px', fontWeight: 'bold' }}>
-              <Zap size={15} /> Combat Boost • Stage {boostInfo.stage}
-            </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
-              Presets: <strong>{boostInfo.presets}</strong> • Chip Boost: <strong style={{ color: '#facc15' }}>+{boostInfo.chipBoost}</strong>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <button type="button" onClick={() => commitBoost((d.combatBoostLevel || 1) - 1)} style={{ ...styles.smallBtn, padding: '5px 7px' }}>
-              -1
-            </button>
-            <input
-              type="number"
-              min="1"
-              max="900"
-              value={boostText}
-              onChange={(e) => handleBoostInput(e.target.value)}
-              onBlur={(e) => commitBoost(e.target.value)}
-              style={{ ...numInputStyle, width: '54px', fontSize: '13px' }}
-            />
-            <button type="button" onClick={() => commitBoost((d.combatBoostLevel || 1) + 1)} style={{ ...styles.smallBtn, padding: '5px 7px', backgroundColor: '#2563eb' }}>
-              +1
-            </button>
-          </div>
-        </div>
-      </div>
-                  <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
+                            <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Layers size={14} color="#facc15" /> Skill Chips (Set {selectedChipSet})

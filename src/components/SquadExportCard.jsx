@@ -1,6 +1,7 @@
 import React from 'react';
 import { INITIAL_HEROES } from '../data/heroesData';
 import { calculateHeroPower, calculateOverlordPower, formatPower } from '../utils/powerCalculator';
+import { calculateDronePower } from '../data/droneData';
 
 const SQUAD_NUMS = Array.from({ length: 4 }, (_, i) => i + 1);
 const FRONT_KEYS = ['front1', 'front2'];
@@ -12,7 +13,7 @@ const GEAR_LIST = [
   { key: 'radar', short: 'Radar' },
 ];
 
-export default function SquadExportCard({ exportRef, squads, progress, overlord, getSynergyFn }) {
+export default function SquadExportCard({ exportRef, squads, progress, overlord, drone, getSynergyFn }) {
   const getRarityColor = (rarity, isPromoted) => {
     const eff = isPromoted ? 'UR' : rarity;
     if (eff === 'UR') return '#eab308';
@@ -210,7 +211,9 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
             return h ? sum + calculateHeroPower(h, progress[id]) : sum;
           }, 0);
           const ovPower = hasOverlord ? calculateOverlordPower(overlord) : 0;
-          const totalPower = Math.round(heroesBasePower * (1 + synergy.bonus / 100) + ovPower);
+          const dronePower = drone ? calculateDronePower(drone) : 0;
+          const totalPower = Math.round(heroesBasePower * (1 + synergy.bonus / 100) + ovPower + dronePower);
+        
 
           return (
             <div

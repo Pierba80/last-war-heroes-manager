@@ -40,7 +40,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
     setBoostText(String(d.combatBoostLevel || 1));
   }, [d.combatBoostLevel]);
 
-  const { current: model, next: nextModel } = getDroneModelInfo(d.level || 1);
+  const { current: model } = getDroneModelInfo(d.level || 1);
   const abilityStars = getDroneAbilityStars(d.level || 1);
   const boostInfo = getCombatBoostInfo(d.combatBoostLevel || 1);
   const dronePower = calculateDronePower(d);
@@ -54,6 +54,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
     onUpdateDrone({
       ...createDefaultDrone(),
       stageAvatars: d.stageAvatars || {},
+      manualPowerM: '',
     });
   };
 
@@ -130,7 +131,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
     });
   };
 
-  // Supports 0-5 Yellow Stars + 6-10 Red Stars
   const changeChipStars = (slotKey, delta) => {
     const current = activeSet[slotKey] || 0;
     const clamped = Math.max(0, Math.min(10, current + delta));
@@ -156,7 +156,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
     fontSize: '12px',
     fontWeight: 'bold',
   };
-               return (
+  return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -255,13 +255,22 @@ export default function DroneView({ drone, onUpdateDrone }) {
         </div>
 
         <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '6px' }}>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#f8fafc' }}>
                 Drone Level
               </div>
-              <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                {nextModel ? `Next skin: ${nextModel.code} at Lv.${nextModel.minLevel}` : 'Max Skin Unlocked (TD-6)'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                <span style={{ fontSize: '11px', color: '#fb923c' }}>Real M:</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="Auto"
+                  value={d.manualPowerM ?? ''}
+                  onChange={(e) => onUpdateDrone({ manualPowerM: e.target.value })}
+                  style={{ ...numInputStyle, width: '58px', padding: '2px 0', fontSize: '12px', borderColor: d.manualPowerM ? '#fb923c' : '#475569' }}
+                />
               </div>
             </div>
 
@@ -313,7 +322,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
         </div>
       </div>
 
-      {/* Combat Boost */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div
           style={{
@@ -355,8 +363,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
           </div>
         </div>
       </div>
-                      {/* Skill Chips (4 Sets with 0-5 Yellow Stars + 1-5 Red Stars) */}
-      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
+                      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Layers size={14} color="#facc15" /> Skill Chips (Set {selectedChipSet})
@@ -441,7 +448,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
         </div>
       </div>
 
-      {/* 6 Drone Components */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -496,7 +502,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
         </div>
       </div>
 
-      {/* Resources Needed */}
       <div style={{ backgroundColor: '#1e293b', border: '1px solid #38bdf8', borderRadius: '10px', padding: '12px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#7dd3fc', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Sparkles size={14} /> Drone Upgrade Resources
@@ -534,4 +539,4 @@ export default function DroneView({ drone, onUpdateDrone }) {
       </div>
     </div>
   );
-}
+                      }

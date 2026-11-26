@@ -146,6 +146,14 @@ export const calculateDronePower = (drone = {}) => {
   const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
   const boostPower = boostLvl * 1_460;
 
+  const rawDronePower = basePower + compPower + boostPower;
+  return Math.round(rawDronePower * 0.9438);
+};
+
+
+  const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
+  const boostPower = boostLvl * 1_460;
+
   return Math.round(basePower + compPower + boostPower);
 };
 

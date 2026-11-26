@@ -22,6 +22,10 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
     ? progress.skills
     : Array(3).fill(1);
 
+  const skillLabels = Array.isArray(hero.skillNames) && hero.skillNames.length === 3
+    ? hero.skillNames
+    : ['Active Skill', 'Passive Skill 1', 'Passive Skill 2'];
+
   const awakenStars = progress.awakeningStars || 0;
   const awakenTiers = progress.awakeningTiers || 0;
   const maxAwakenSkill = getMaxAwakeningSkillLevel(awakenStars);
@@ -80,8 +84,7 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
     padding: '2px 0',
     fontSize: '11px',
     fontWeight: 'bold',
-  };
-        return (
+  };  return (
     <div style={{ marginTop: '10px', borderTop: '1px solid #334155', paddingTop: '10px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#f8fafc' }}>
@@ -95,7 +98,7 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-        {hero.skillNames.map((skillName, idx) => {
+        {skillLabels.map((skillName, idx) => {
           const val = Math.min(maxSkillLevel, currentSkills[idx] || 1);
           return (
             <div
@@ -289,5 +292,6 @@ export default function HeroSkillsSection({ hero, progress, onUpdate }) {
       )}
     </div>
   );
-                      }
+                                         }
                          
+                                                               

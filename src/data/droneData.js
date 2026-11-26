@@ -146,13 +146,13 @@ export const calculateDronePower = (drone = {}) => {
   const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
   const boostPower = boostLvl * 1_460;
 
-  const sets = drone.chipSets || {};
-  const setKeys =;
+    const sets = drone.chipSets || {};
   let chipStarsSum = 0;
-  for (let i = 0; i < setKeys.length; i++) {
-    const s = sets[setKeys[i]] || { top: 0, center: 0, left: 0, right: 0 };
+  for (let setNum = 1; setNum <= 4; setNum++) {
+    const s = sets[setNum] || { top: 0, center: 0, left: 0, right: 0 };
     chipStarsSum += (s.top || 0) + (s.center || 0) + (s.left || 0) + (s.right || 0);
   }
+  
   const chipPower = chipStarsSum * 24_000;
 
   const rawDronePower = basePower + compPower + boostPower + chipPower;

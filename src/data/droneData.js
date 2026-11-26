@@ -134,14 +134,21 @@ export const createDefaultDrone = () => ({
 export const calculateDronePower = (drone = {}) => {
   const lvl = Math.max(1, drone.level || 1);
   const crit = Math.max(1, drone.critStage || 1);
-  const basePower = 1_200_000 + lvl * 28_500 + crit * 120_000;
+  const basePower = 430_000 + lvl * 10_200 + crit * 42_000;
 
   const comps = drone.components || {};
   let compPower = 0;
   DRONE_COMPONENTS_LIST.forEach((c) => {
     const item = comps[c.key] || { level: 1, pct: 0 };
-    compPower += (item.level || 1) * 580_000 + ((item.pct || 0) / 100) * 580_000;
+    compPower += (item.level || 1) * 207_000 + ((item.pct || 0) / 100) * 207_000;
   });
+
+  const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
+  const boostPower = boostLvl * 1_460;
+
+  return Math.round(basePower + compPower + boostPower);
+};
+
 
   const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
   const boostPower = boostLvl * 4_100;

@@ -25,6 +25,7 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
       unlocked: false,
       isPromotedUR: false,
       level: 1,
+      manualPowerM: '',
       stars: 0,
       tiers: 0,
       squad: null,
@@ -58,7 +59,6 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
 
   return (
     <div style={{ ...styles.card, borderLeft: `5px solid ${borderColor}`, opacity: p.unlocked ? 1 : 0.65 }}>
-      {/* Top Row: Avatar + Name + Power + Squad Badge + Lock */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <HeroAvatar
@@ -109,8 +109,7 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
           </button>
         </div>
       </div>
-                        {/* SSR -> UR Promotion Toggle */}
-      {hero.canPromoteUR && (
+            {hero.canPromoteUR && (
         <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', padding: '6px 10px', borderRadius: '8px' }}>
           <span style={{ fontSize: '11px', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Sparkles size={13} color="#eab308" /> UR Promotion (Season)
@@ -134,7 +133,6 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
         </div>
       )}
 
-      {/* Stars & Tiers Control */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', padding: '8px 10px', borderRadius: '8px', marginBottom: '10px' }}>
         <div>
           <div style={{ display: 'flex', gap: '3px', marginBottom: '4px' }}>
@@ -172,33 +170,46 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
         </div>
       </div>
 
-      {/* Level & Shards Summary */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#cbd5e1' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span>EXP Lv:</span>
-          <input
-            type="number"
-            min="1"
-            max="200"
-            value={p.level}
-            onChange={(e) => onUpdate(hero.id, { level: Math.max(1, Number(e.target.value)) })}
-            style={styles.numInput}
-          />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#cbd5e1', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>EXP:</span>
+            <input
+              type="number"
+              min="1"
+              max="200"
+              value={p.level}
+              onChange={(e) => onUpdate(hero.id, { level: Math.max(1, Number(e.target.value)) })}
+              style={{ ...styles.numInput, width: '48px' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ color: '#fb923c', fontSize: '11px' }}>Real M:</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="Auto"
+              value={p.manualPowerM ?? ''}
+              onChange={(e) => onUpdate(hero.id, { manualPowerM: e.target.value })}
+              style={{ ...styles.numInput, width: '54px', borderColor: p.manualPowerM ? '#fb923c' : '#334155' }}
+            />
+          </div>
         </div>
 
         <div style={{ textAlign: 'right' }}>
           {p.stars < 5 ? (
             <>
-              <div>Next ★: <strong style={{ color: '#38bdf8' }}>{shards.nextStar}</strong> shards</div>
-              <div>To 5★: <strong style={{ color: '#facc15' }}>{shards.maxStars}</strong> shards</div>
+              <div>Next ★: <strong style={{ color: '#38bdf8' }}>{shards.nextStar}</strong></div>
+              <div>To 5★: <strong style={{ color: '#facc15' }}>{shards.maxStars}</strong></div>
             </>
           ) : (
-            <strong style={{ color: '#4ade80' }}>MAX 5 STARS</strong>
+            <strong style={{ color: '#4ade80' }}>MAX 5★</strong>
           )}
         </div>
       </div>
 
-      {/* Expandable Details: Skills, Exclusive Weapon, Awakening & Gear */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -234,4 +245,4 @@ export default function HeroCard({ hero, progress, onUpdate, onChangeTier, onRem
       )}
     </div>
   );
-          }
+      }

@@ -1,4 +1,4 @@
-const HERO_POWER_CALIBRATION = 2.0325;
+const HERO_POWER_CALIBRATION = 2.15;
 const OVERLORD_POWER_CALIBRATION = 0.6404;
 
 export const formatPower = (num) => {

@@ -1,7 +1,6 @@
-import React, { useRef } from 'react';
-import { Plane, Plus, Minus, Star, RotateCcw, Sparkles, Database, Settings, Cpu, Zap, Camera } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Plane, Plus, Minus, RotateCcw, Sparkles, Database, Settings, Cpu, Zap, Camera, Star } from 'lucide-react';
 import {
-  DRONE_MODELS,
   DRONE_COMPONENTS_LIST,
   getDroneModelInfo,
   getDroneAbilityStars,
@@ -19,6 +18,17 @@ const ABILITY_STARS = Array.from({ length: 6 }, (_, i) => i + 1);
 export default function DroneView({ drone, onUpdateDrone }) {
   const d = { ...createDefaultDrone(), ...(drone || {}) };
   const fileInputRef = useRef(null);
+
+  const [levelText, setLevelText] = useState(String(d.level || 1));
+  const [boostText, setBoostText] = useState(String(d.combatBoostLevel || 1));
+
+  useEffect(() => {
+    setLevelText(String(d.level || 1));
+  }, [d.level]);
+
+  useEffect(() => {
+    setBoostText(String(d.combatBoostLevel || 1));
+  }, [d.combatBoostLevel]);
 
   const { current: model, next: nextModel } = getDroneModelInfo(d.level || 1);
   const abilityStars = getDroneAbilityStars(d.level || 1);
@@ -52,15 +62,50 @@ export default function DroneView({ drone, onUpdateDrone }) {
     e.target.value = '';
   };
 
-  const updateLevel = (rawVal) => {
+  const commitLevel = (rawVal) => {
+    if (rawVal === '') {
+      setLevelText('1');
+      onUpdateDrone({ level: 1 });
+      return;
+    }
     const parsed = Number(rawVal);
     const safe = Number.isNaN(parsed) ? 1 : parsed;
     const clamped = Math.max(1, Math.min(300, safe));
+    setLevelText(String(clamped));
     onUpdateDrone({ level: clamped });
   };
 
-  const updateComponent = (key, field, rawVal, maxVal) => {
+  const handleLevelInput = (val) => {
+    setLevelText(val);
+    if (val !== '' && !Number.isNaN(Number(val))) {
+      const clamped = Math.max(1, Math.min(300, Number(val)));
+      onUpdateDrone({ level: clamped });
+    }
+  };
+
+  const commitBoost = (rawVal) => {
+    if (rawVal === '') {
+      setBoostText('1');
+      onUpdateDrone({ combatBoostLevel: 1 });
+      return;
+    }
     const parsed = Number(rawVal);
+    const safe = Number.isNaN(parsed) ? 1 : parsed;
+    const clamped = Math.max(1, Math.min(900, safe));
+    setBoostText(String(clamped));
+    onUpdateDrone({ combatBoostLevel: clamped });
+  };
+
+  const handleBoostInput = (val) => {
+    setBoostText(val);
+    if (val !== '' && !Number.isNaN(Number(val))) {
+      const clamped = Math.max(1, Math.min(900, Number(val)));
+      onUpdateDrone({ combatBoostLevel: clamped });
+    }
+  };
+
+  const updateComponent = (key, field, rawVal, maxVal) => {
+    const parsed = rawVal === '' ? 0 : Number(rawVal);
     const safe = Number.isNaN(parsed) ? 0 : parsed;
     const clamped = Math.max(0, Math.min(maxVal, safe));
     onUpdateDrone({
@@ -74,13 +119,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
     });
   };
 
-  const updateBoostLevel = (rawVal) => {
-    const parsed = Number(rawVal);
-    const safe = Number.isNaN(parsed) ? 1 : parsed;
-    const clamped = Math.max(1, Math.min(900, safe));
-    onUpdateDrone({ combatBoostLevel: clamped });
-  };
-
   const numInputStyle = {
     width: '48px',
     textAlign: 'center',
@@ -88,13 +126,12 @@ export default function DroneView({ drone, onUpdateDrone }) {
     border: '1px solid #475569',
     color: '#ffffff',
     borderRadius: '5px',
-    padding: '3px 0',
+    padding: '4px 0',
     fontSize: '12px',
     fontWeight: 'bold',
   };
-    return (
+      return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {/* Main Drone Card: Evolving Model, Skin Bonus, Level & Crit Stage */}
       <div
         style={{
           backgroundColor: '#1e293b',
@@ -177,7 +214,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
           </button>
         </div>
 
-        {/* Unlocked Skin Bonus Banner */}
         <div
           style={{
             backgroundColor: '#0f172a',
@@ -192,7 +228,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
           <strong style={{ color: model.color }}>Skin Bonus Active:</strong> {model.bonus}
         </div>
 
-        {/* Drone Level & Critical Stage (1-5) */}
         <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div>
@@ -205,18 +240,19 @@ export default function DroneView({ drone, onUpdateDrone }) {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <button type="button" onClick={() => updateLevel((d.level || 1) - 1)} style={styles.smallBtn}>
+              <button type="button" onClick={() => commitLevel((d.level || 1) - 1)} style={styles.smallBtn}>
                 <Minus size={13} />
               </button>
               <input
                 type="number"
                 min="1"
                 max="300"
-                value={d.level || 1}
-                onChange={(e) => updateLevel(e.target.value)}
-                style={{ ...numInputStyle, width: '52px', fontSize: '13px' }}
+                value={levelText}
+                onChange={(e) => handleLevelInput(e.target.value)}
+                onBlur={(e) => commitLevel(e.target.value)}
+                style={{ ...numInputStyle, width: '54px', fontSize: '13px' }}
               />
-              <button type="button" onClick={() => updateLevel((d.level || 1) + 1)} style={{ ...styles.smallBtn, backgroundColor: '#2563eb' }}>
+              <button type="button" onClick={() => commitLevel((d.level || 1) + 1)} style={{ ...styles.smallBtn, backgroundColor: '#2563eb' }}>
                 <Plus size={13} />
               </button>
             </div>
@@ -251,7 +287,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
         </div>
       </div>
 
-      {/* Combat Boost (Lv. 1-900) */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div
           style={{
@@ -270,30 +305,30 @@ export default function DroneView({ drone, onUpdateDrone }) {
               <Zap size={15} /> Combat Boost • Stage {boostInfo.stage}
             </div>
             <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
-              Presets: <strong>{boostInfo.presets}</strong> • Chip Skill Boost: <strong style={{ color: '#facc15' }}>+{boostInfo.chipBoost}</strong>
+              Presets: <strong>{boostInfo.presets}</strong> • Chip Boost: <strong style={{ color: '#facc15' }}>+{boostInfo.chipBoost}</strong>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <button type="button" onClick={() => updateBoostLevel((d.combatBoostLevel || 1) - 10)} style={styles.smallBtn}>
-              -10
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button type="button" onClick={() => commitBoost((d.combatBoostLevel || 1) - 1)} style={{ ...styles.smallBtn, padding: '5px 7px' }}>
+              -1
             </button>
             <input
               type="number"
               min="1"
               max="900"
-              value={d.combatBoostLevel || 1}
-              onChange={(e) => updateBoostLevel(e.target.value)}
-              style={{ ...numInputStyle, width: '52px' }}
+              value={boostText}
+              onChange={(e) => handleBoostInput(e.target.value)}
+              onBlur={(e) => commitBoost(e.target.value)}
+              style={{ ...numInputStyle, width: '54px', fontSize: '13px' }}
             />
-            <button type="button" onClick={() => updateBoostLevel((d.combatBoostLevel || 1) + 10)} style={styles.smallBtn}>
-              +10
+            <button type="button" onClick={() => commitBoost((d.combatBoostLevel || 1) + 1)} style={{ ...styles.smallBtn, padding: '5px 7px', backgroundColor: '#2563eb' }}>
+              +1
             </button>
           </div>
         </div>
       </div>
-                                    {/* 6 Drone Components */}
-      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
+                      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Cpu size={14} color="#38bdf8" /> Drone Components (6)
@@ -347,7 +382,6 @@ export default function DroneView({ drone, onUpdateDrone }) {
         </div>
       </div>
 
-      {/* Resources Needed */}
       <div style={{ backgroundColor: '#1e293b', border: '1px solid #38bdf8', borderRadius: '10px', padding: '12px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#7dd3fc', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Sparkles size={14} /> Drone Upgrade Resources

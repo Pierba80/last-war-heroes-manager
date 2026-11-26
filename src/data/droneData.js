@@ -110,9 +110,9 @@ export const getCombatBoostInfo = (boostLevel = 1) => {
   }
   return { ...current, nextLvl };
 };
-export const createDefaultDrone = () => ({
+  export const createDefaultDrone = () => ({
   level: 208,
-  critStage: 1, // 1 to 5
+  critStage: 1,
   stageAvatars: {},
   components: {
     radar: { level: 10, pct: 15 },
@@ -149,13 +149,6 @@ export const calculateDronePower = (drone = {}) => {
   return Math.round(basePower + compPower + boostPower);
 };
 
-
-  const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
-  const boostPower = boostLvl * 4_100;
-
-  return Math.round(basePower + compPower + boostPower);
-};
-
 export const calculateDroneResources = (drone = {}) => {
   const currentLvl = Math.min(250, Math.max(1, drone.level || 1));
   const { next } = getDroneModelInfo(currentLvl);
@@ -184,4 +177,4 @@ export const calculateDroneResources = (drone = {}) => {
     partsTo250,
   };
 };
-    
+  

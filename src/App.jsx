@@ -15,6 +15,7 @@ const STORAGE_KEY = 'last_war_heroes_progress_v1';
 const SQUADS_STORAGE_KEY = 'last_war_squads_v1';
 const OVERLORD_STORAGE_KEY = 'last_war_overlord_v1';
 const DRONE_STORAGE_KEY = 'last_war_drone_v1';
+const SQUAD_POWERS_STORAGE_KEY = 'last_war_squad_powers_v1';
 const SQUAD_NUMBERS = Array.from({ length: 4 }, (_, i) => i + 1);
 
 const DEFAULT_SQUADS = {
@@ -77,6 +78,19 @@ export default function App() {
     return createDefaultDrone();
   });
 
+  const [squadPowers, setSquadPowers] = useState(() => {
+  const saved = localStorage.getItem(SQUAD_POWERS_STORAGE_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      return {};
+    }
+  }
+  return {};
+});
+  
+
   const [filterType, setFilterType] = useState('All');
   const [filterSquad, setFilterSquad] = useState('All');
   const [search, setSearch] = useState('');
@@ -97,6 +111,17 @@ export default function App() {
     localStorage.setItem(DRONE_STORAGE_KEY, JSON.stringify(drone));
   }, [drone]);
 
+  useEffect(() => {
+  localStorage.setItem(SQUAD_POWERS_STORAGE_KEY, JSON.stringify(squadPowers));
+}, [squadPowers]);
+
+const updateSquadPower = (squadNum, val) => {
+  setSquadPowers((prev) => ({
+    ...prev,
+    [squadNum]: val,
+  }));
+};
+  
   useEffect(() => {
     return () => {
       musicPlayer.stop();

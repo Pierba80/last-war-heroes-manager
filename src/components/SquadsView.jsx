@@ -46,13 +46,13 @@ const getSquadSynergy = (heroIds) => {
     label = `5 ${topType} Heroes (+20% HP, ATK & DEF)`;
   } else if (topCount === 4) {
     bonus = 15;
-    label = `4 ${topType} Heroes (+15% HP, ATK & DEF)`;
+    label = `4 ${topType} + 1 Mix (+15% HP, ATK & DEF)`;
   } else if (topCount === 3 && secondCount === 2) {
     bonus = 10;
-    label = `3 ${topType} + 2 Mix (+10% HP, ATK & DEF)`;
+    label = `3 ${topType} + 2 Same Type (+10% HP, ATK & DEF)`;
   } else if (topCount === 3) {
     bonus = 5;
-    label = `3 ${topType} Heroes (+5% HP, ATK & DEF)`;
+    label = `3 ${topType} + 2 Mix (+5% HP, ATK & DEF)`;
   }
 
   const counters = {
@@ -85,8 +85,7 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
   }, 0);
   const ovPower = hasOverlord ? calculateOverlordPower(overlord) : 0;
   const dronePower = drone ? calculateDronePower(drone) : 0;
-  const synergyMultiplier = 1 + synergy.bonus / 100;
-  const totalSquadPower = Math.round(heroesBasePower * synergyMultiplier + ovPower + dronePower);
+  const totalSquadPower = Math.round(heroesBasePower + ovPower + dronePower);
 
   const handleResetCurrentSquad = () => {
     if (assignedIds.length === 0 && !hasOverlord) return;
@@ -121,7 +120,7 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
       setIsExporting(false);
     }
   };
-  const getRarityBorder = (hero) => {
+    const getRarityBorder = (hero) => {
     const p = progress[hero.id] || {};
     const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
     if (effectiveRarity === 'UR') return '#eab308';
@@ -419,5 +418,4 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
       )}
     </div>
   );
-              }
-                    
+                }

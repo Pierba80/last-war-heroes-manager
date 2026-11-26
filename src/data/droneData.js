@@ -75,12 +75,12 @@ export const COMBAT_BOOST_STAGES = [
 ];
 
 export const getDroneModelInfo = (level = 1) => {
-  let current = DRONE_MODELS.at(0);
+  let current = DRONE_MODELS[0];
   let next = null;
   for (let i = 0; i < DRONE_MODELS.length; i++) {
-    if (level >= DRONE_MODELS.at(i).minLevel) {
-      current = DRONE_MODELS.at(i);
-      next = DRONE_MODELS.at(i + 1) || null;
+    if (level >= DRONE_MODELS[i].minLevel) {
+      current = DRONE_MODELS[i];
+      next = DRONE_MODELS[i + 1] || null;
     }
   }
   return { current, next };
@@ -99,13 +99,13 @@ export const getCombatBoostInfo = (boostLevel = 1) => {
   if (boostLevel < 10) {
     return { stage: '0', minLvl: 1, nextLvl: 10, color: '#64748b', presets: 0, chipBoost: 0 };
   }
-  let current = COMBAT_BOOST_STAGES.at(0);
+  let current = COMBAT_BOOST_STAGES[0];
   let nextLvl = 150;
   for (let i = 0; i < COMBAT_BOOST_STAGES.length; i++) {
-    const item = COMBAT_BOOST_STAGES.at(i);
+    const item = COMBAT_BOOST_STAGES[i];
     if (boostLevel >= item.minLvl) {
       current = item;
-      nextLvl = COMBAT_BOOST_STAGES.at(i + 1)?.minLvl || 900;
+      nextLvl = COMBAT_BOOST_STAGES[i + 1] ? COMBAT_BOOST_STAGES[i + 1].minLvl : 900;
     }
   }
   return { ...current, nextLvl };
@@ -113,6 +113,7 @@ export const getCombatBoostInfo = (boostLevel = 1) => {
 export const createDefaultDrone = () => ({
   level: 208,
   critStage: 1,
+  manualPowerM: '',
   stageAvatars: {},
   components: {
     radar: { level: 10, pct: 15 },
@@ -132,12 +133,20 @@ export const createDefaultDrone = () => ({
 });
 
 export const calculateDronePower = (drone = {}) => {
-  if (drone.manualPowerM !== undefined && drone.manualPowerM !== null && drone.manualPowerM !== '' && Number(drone.manualPowerM) > 0) {
+  if (
+    drone &&
+    drone.manualPowerM !== undefined &&
+    drone.manualPowerM !== null &&
+    drone.manualPowerM !== '' &&
+    Number(drone.manualPowerM) > 0
+  ) {
     return Math.round(Number(drone.manualPowerM) * 1_000_000);
   }
 
   const lvl = Math.max(1, drone.level || 1);
-  
+  const crit = Math.max(1, drone.critStage || 1);
+  const basePower = 430_000 + lvl * 10_200 + crit * 42_000;
+
   const comps = drone.components || {};
   let compPower = 0;
   DRONE_COMPONENTS_LIST.forEach((c) => {
@@ -148,13 +157,12 @@ export const calculateDronePower = (drone = {}) => {
   const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
   const boostPower = boostLvl * 1_460;
 
-    const sets = drone.chipSets || {};
+  const sets = drone.chipSets || {};
   let chipStarsSum = 0;
   for (let setNum = 1; setNum <= 4; setNum++) {
     const s = sets[setNum] || { top: 0, center: 0, left: 0, right: 0 };
     chipStarsSum += (s.top || 0) + (s.center || 0) + (s.left || 0) + (s.right || 0);
   }
-  
   const chipPower = chipStarsSum * 24_000;
 
   const rawDronePower = basePower + compPower + boostPower + chipPower;
@@ -189,4 +197,4 @@ export const calculateDroneResources = (drone = {}) => {
     partsTo250,
   };
 };
-  
+      

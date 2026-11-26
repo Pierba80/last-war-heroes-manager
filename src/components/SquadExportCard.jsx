@@ -1,5 +1,6 @@
 import React from 'react';
 import { INITIAL_HEROES } from '../data/heroesData';
+import { calculateHeroPower, calculateOverlordPower, formatPower } from '../utils/powerCalculator';
 
 const SQUAD_NUMS = Array.from({ length: 4 }, (_, i) => i + 1);
 const FRONT_KEYS = ['front1', 'front2'];
@@ -55,6 +56,7 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
     }
 
     const p = progress[hero.id] || {};
+    const heroPower = calculateHeroPower(hero, p);
     const borderCol = getRarityColor(hero.rarity, p.isPromotedUR);
     const skills = Array.isArray(p.skills) && p.skills.length === 3 ? p.skills : Array(3).fill(1);
     const gear = p.gear || {};
@@ -103,7 +105,7 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
               {hero.name}
             </div>
             <div style={{ fontSize: '10px', color: '#facc15', fontWeight: 'bold' }}>
-              Lv.{p.level || 1} • {p.stars || 0}★ {p.tiers > 0 ? `(${p.tiers}/5)` : ''}
+              Lv.{p.level || 1} • {p.stars || 0}★ • <span style={{ color: '#fb923c' }}>⚡{formatPower(heroPower)}</span>
             </div>
           </div>
         </div>
@@ -161,7 +163,7 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
       </div>
     );
   };
-                                    return (
+      return (
     <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }}>
       <div
         ref={exportRef}
@@ -186,7 +188,7 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
                 ALL SQUADS OVERVIEW (1–4)
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                Heroes, Overlord, Skills, Weapons & Gear
+                Heroes, Overlord, Power, Skills, Weapons & Gear
               </div>
             </div>
           </div>
@@ -203,6 +205,13 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
           const synergy = getSynergyFn(assignedIds);
           const hasOverlord = overlord && overlord.squad === sqNum;
 
+          const heroesBasePower = assignedIds.reduce((sum, id) => {
+            const h = INITIAL_HEROES.find((item) => item.id === id);
+            return h ? sum + calculateHeroPower(h, progress[id]) : sum;
+          }, 0);
+          const ovPower = hasOverlord ? calculateOverlordPower(overlord) : 0;
+          const totalPower = Math.round(heroesBasePower * (1 + synergy.bonus / 100) + ovPower);
+
           return (
             <div
               key={sqNum}
@@ -214,7 +223,12 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <strong style={{ fontSize: '15px', color: '#facc15' }}>SQUAD {sqNum}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <strong style={{ fontSize: '15px', color: '#facc15' }}>SQUAD {sqNum}</strong>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#fb923c' }}>
+                    ⚡ {formatPower(totalPower)}
+                  </span>
+                </div>
                 <span style={{ fontSize: '11px', color: synergy.bonus > 0 ? '#4ade80' : '#94a3b8', fontWeight: 'bold' }}>
                   {synergy.label}
                 </span>
@@ -243,7 +257,9 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
                       }}
                       style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #ef4444', objectFit: 'cover' }}
                     />
-                    <strong style={{ color: '#fca5a5' }}>OVERLORD G{overlord.tier || 1} • Lv.{overlord.level || 1}</strong>
+                    <strong style={{ color: '#fca5a5' }}>
+                      OVERLORD Lv.{overlord.level || 1} • <span style={{ color: '#fb923c' }}>⚡{formatPower(ovPower)}</span>
+                    </strong>
                   </div>
                   <div style={{ color: '#cbd5e1', fontSize: '10px' }}>
                     ATK/DEF/PS: <strong style={{ color: '#4ade80' }}>{overlord.training?.atk || 1}/{overlord.training?.def || 1}/{overlord.training?.hp || 1}</strong> • Skills: <strong style={{ color: '#38bdf8' }}>{overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.brutal || 1}/{overlord.skills?.instinct || 1}/{overlord.skills?.command || 1}</strong>
@@ -267,4 +283,5 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
       </div>
     </div>
   );
-                    }
+          }
+                          

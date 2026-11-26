@@ -87,8 +87,6 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
   const dronePower = drone ? calculateDronePower(drone) : 0;
   const synergyMultiplier = 1 + synergy.bonus / 100;
   const totalSquadPower = Math.round(heroesBasePower * synergyMultiplier + ovPower + dronePower);
-  const synergyMultiplier = 1 + synergy.bonus / 100;
-  const totalSquadPower = Math.round(heroesBasePower * synergyMultiplier + ovPower);
 
   const handleResetCurrentSquad = () => {
     if (assignedIds.length === 0 && !hasOverlord) return;
@@ -123,7 +121,7 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
       setIsExporting(false);
     }
   };
-    const getRarityBorder = (hero) => {
+  const getRarityBorder = (hero) => {
     const p = progress[hero.id] || {};
     const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
     if (effectiveRarity === 'UR') return '#eab308';
@@ -248,7 +246,6 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
         ))}
       </div>
 
-      {/* Total Squad Power + Synergy Banner */}
       <div
         style={{
           backgroundColor: '#1e293b',
@@ -422,5 +419,5 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
       )}
     </div>
   );
-    }
-            
+              }
+                    

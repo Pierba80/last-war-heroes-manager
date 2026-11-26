@@ -132,10 +132,12 @@ export const createDefaultDrone = () => ({
 });
 
 export const calculateDronePower = (drone = {}) => {
-  const lvl = Math.max(1, drone.level || 1);
-  const crit = Math.max(1, drone.critStage || 1);
-  const basePower = 430_000 + lvl * 10_200 + crit * 42_000;
+  if (drone.manualPowerM !== undefined && drone.manualPowerM !== null && drone.manualPowerM !== '' && Number(drone.manualPowerM) > 0) {
+    return Math.round(Number(drone.manualPowerM) * 1_000_000);
+  }
 
+  const lvl = Math.max(1, drone.level || 1);
+  
   const comps = drone.components || {};
   let compPower = 0;
   DRONE_COMPONENTS_LIST.forEach((c) => {

@@ -1,4 +1,4 @@
-const POWER_CALIBRATION = 0.833;
+const POWER_CALIBRATION = 2.0325;
 
 export const formatPower = (num) => {
   if (!num || num <= 0) return '0';

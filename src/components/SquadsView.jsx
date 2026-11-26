@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Shield, Plane, Rocket, Users, X, Sparkles, RotateCcw, Image as ImageIcon, Crown } from 'lucide-react';
+import { Shield, Plane, Rocket, Users, X, Sparkles, RotateCcw, Image as ImageIcon, Crown, Edit3 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { INITIAL_HEROES } from '../data/heroesData';
 import HeroAvatar from './HeroAvatar';
@@ -67,10 +67,21 @@ const getSquadSynergy = (heroIds) => {
     counter: topCount >= 3 ? counters[topType] : null,
   };
 };
-
-export default function SquadsView({ progress, squads, overlord, drone, onAssignSlot, onClearSlot, onResetSquad, onRemoveOverlord }) {
+   export default function SquadsView({
+  progress,
+  squads,
+  overlord,
+  drone,
+  squadPowers = {},
+  onUpdateSquadPower,
+  onAssignSlot,
+  onClearSlot,
+  onResetSquad,
+  onRemoveOverlord,
+}) {
   const [selectedSquad, setSelectedSquad] = useState(1);
   const [pickingSlot, setPickingSlot] = useState(null);
+  const [editingPower, setEditingPower] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const exportRef = useRef(null);
 
@@ -85,12 +96,17 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
   }, 0);
   const ovPower = hasOverlord ? calculateOverlordPower(overlord) : 0;
   const dronePower = drone ? calculateDronePower(drone) : 0;
-  const totalSquadPower = Math.round(heroesBasePower + ovPower + dronePower);
+  const autoSquadPower = Math.round(heroesBasePower + ovPower + dronePower);
+
+  const manualM = squadPowers[selectedSquad];
+  const hasManualPower = manualM !== undefined && manualM !== null && manualM !== '' && Number(manualM) > 0;
+  const totalSquadPower = hasManualPower ? Math.round(Number(manualM) * 1_000_000) : autoSquadPower;
 
   const handleResetCurrentSquad = () => {
     if (assignedIds.length === 0 && !hasOverlord) return;
     if (window.confirm(`Clear all heroes from Squad ${selectedSquad}?`)) {
       onResetSquad(selectedSquad);
+      if (onUpdateSquadPower) onUpdateSquadPower(selectedSquad, '');
     }
   };
 
@@ -120,7 +136,7 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
       setIsExporting(false);
     }
   };
-    const getRarityBorder = (hero) => {
+       const getRarityBorder = (hero) => {
     const p = progress[hero.id] || {};
     const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
     if (effectiveRarity === 'UR') return '#eab308';
@@ -220,8 +236,7 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
       </div>
     );
   };
-
-  return (
+        return (
     <div>
       <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
         {SQUAD_TABS.map((num) => (
@@ -231,6 +246,7 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
             onClick={() => {
               setSelectedSquad(num);
               setPickingSlot(null);
+              setEditingPower(false);
             }}
             style={{
               ...styles.filterBtn(selectedSquad === num),
@@ -252,51 +268,125 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
           borderRadius: '10px',
           padding: '10px 12px',
           marginBottom: '12px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '8px',
         }}
       >
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: '14px', fontWeight: '900', color: '#fb923c', marginBottom: '3px' }}>
-            ⚡ Total Squad Power: {formatPower(totalSquadPower)}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Sparkles size={13} color={synergy.bonus > 0 ? '#facc15' : '#64748b'} />
-            <span style={{ fontSize: '11px', fontWeight: 'bold', color: synergy.bonus > 0 ? '#facc15' : '#cbd5e1' }}>
-              {synergy.label}
-            </span>
-          </div>
-          {synergy.counter && (
-            <div style={{ fontSize: '10px', color: '#4ade80', marginLeft: '18px' }}>
-              {synergy.counter}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '14px', fontWeight: '900', color: '#fb923c' }}>
+                ⚡ Total: {formatPower(totalSquadPower)}
+              </span>
+              <button
+                type="button"
+                onClick={() => setEditingPower(!editingPower)}
+                style={{
+                  backgroundColor: '#0f172a',
+                  border: '1px solid #fb923c',
+                  color: '#fb923c',
+                  borderRadius: '5px',
+                  padding: '2px 7px',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  cursor: 'pointer',
+                }}
+              >
+                <Edit3 size={10} /> Set Power
+              </button>
             </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <Sparkles size={13} color={synergy.bonus > 0 ? '#facc15' : '#64748b'} />
+              <span style={{ fontSize: '11px', fontWeight: 'bold', color: synergy.bonus > 0 ? '#facc15' : '#cbd5e1' }}>
+                {synergy.label}
+              </span>
+            </div>
+            {synergy.counter && (
+              <div style={{ fontSize: '10px', color: '#4ade80', marginLeft: '18px' }}>
+                {synergy.counter}
+              </div>
+            )}
+          </div>
+
+          {(assignedIds.length > 0 || hasOverlord) && (
+            <button
+              type="button"
+              onClick={handleResetCurrentSquad}
+              title="Clear squad"
+              style={{
+                backgroundColor: '#7f1d1d',
+                border: '1px solid #ef4444',
+                color: '#fca5a5',
+                borderRadius: '6px',
+                padding: '6px 8px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <RotateCcw size={12} /> Reset
+            </button>
           )}
         </div>
 
-        {(assignedIds.length > 0 || hasOverlord) && (
-          <button
-            type="button"
-            onClick={handleResetCurrentSquad}
-            title="Clear squad"
+        {editingPower && (
+          <div
             style={{
-              backgroundColor: '#7f1d1d',
-              border: '1px solid #ef4444',
-              color: '#fca5a5',
-              borderRadius: '6px',
-              padding: '6px 8px',
-              fontSize: '11px',
-              fontWeight: 'bold',
+              backgroundColor: '#0f172a',
+              border: '1px solid #fb923c',
+              borderRadius: '8px',
+              padding: '8px 10px',
+              marginTop: '8px',
               display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              flexShrink: 0,
+              gap: '8px',
             }}
           >
-            <RotateCcw size={12} /> Reset
-          </button>
+            <span style={{ fontSize: '11px', color: '#fed7aa', fontWeight: 'bold' }}>
+              Real Squad Power (M):
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="e.g. 74.11"
+                value={squadPowers[selectedSquad] ?? ''}
+                onChange={(e) => onUpdateSquadPower && onUpdateSquadPower(selectedSquad, e.target.value.replace(',', '.'))}
+                style={{
+                  width: '75px',
+                  textAlign: 'center',
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #fb923c',
+                  color: '#ffffff',
+                  borderRadius: '5px',
+                  padding: '4px 0',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => onUpdateSquadPower && onUpdateSquadPower(selectedSquad, '')}
+                style={{ ...styles.smallBtn, fontSize: '10px', padding: '5px 7px' }}
+              >
+                Auto
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingPower(false)}
+                style={{ ...styles.smallBtn, backgroundColor: '#16a34a', fontSize: '10px', padding: '5px 8px' }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
@@ -401,6 +491,7 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
         progress={progress}
         overlord={overlord}
         drone={drone}
+        squadPowers={squadPowers}
         getSynergyFn={getSquadSynergy}
       />
 
@@ -419,3 +510,4 @@ export default function SquadsView({ progress, squads, overlord, drone, onAssign
     </div>
   );
                 }
+                         

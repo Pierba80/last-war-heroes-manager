@@ -110,7 +110,7 @@ export const getCombatBoostInfo = (boostLevel = 1) => {
   }
   return { ...current, nextLvl };
 };
-    export const createDefaultDrone = () => ({
+export const createDefaultDrone = () => ({
   level: 208,
   critStage: 1,
   stageAvatars: {},
@@ -146,33 +146,17 @@ export const calculateDronePower = (drone = {}) => {
   const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
   const boostPower = boostLvl * 1_460;
 
-  // Chip Sets bonus (0-5 Yellow Stars + 6-10 Red Stars)
   const sets = drone.chipSets || {};
+  const setKeys =;
   let chipStarsSum = 0;
-  Array.from({ length: 4 }, (_, i) => i + 1).forEach((setNum) => {
-    const s = sets[setNum] || { top: 0, center: 0, left: 0, right: 0 };
+  for (let i = 0; i < setKeys.length; i++) {
+    const s = sets[setKeys[i]] || { top: 0, center: 0, left: 0, right: 0 };
     chipStarsSum += (s.top || 0) + (s.center || 0) + (s.left || 0) + (s.right || 0);
-  });
+  }
   const chipPower = chipStarsSum * 24_000;
 
   const rawDronePower = basePower + compPower + boostPower + chipPower;
   return Math.round(rawDronePower * 0.81);
-};
-
-
-  const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
-  const boostPower = boostLvl * 1_460;
-
-  const sets = drone.chipSets || {};
-  let chipStarsSum = 0;
-  Array.from({ length: 4 }, (_, i) => i + 1).forEach((setNum) => {
-    const s = sets[setNum] || { top: 0, center: 0, left: 0, right: 0 };
-    chipStarsSum += (s.top || 0) + (s.center || 0) + (s.left || 0) + (s.right || 0);
-  });
-  const chipPower = chipStarsSum * 38_000;
-
-  const rawDronePower = basePower + compPower + boostPower + chipPower;
-  return Math.round(rawDronePower * 0.89);
 };
 
 export const calculateDroneResources = (drone = {}) => {
@@ -203,3 +187,4 @@ export const calculateDroneResources = (drone = {}) => {
     partsTo250,
   };
 };
+  

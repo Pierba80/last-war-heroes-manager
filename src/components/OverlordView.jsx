@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Crown, Lock, Unlock, RotateCcw, Plus, Minus, Shield, Sparkles, BookOpen, Award, FileCheck, Star, Heart } from 'lucide-react';
 import {
   OVERLORD_SKILLS,
@@ -20,6 +20,16 @@ const SKILL_STAR_LIST = Array.from({ length: 6 }, (_, i) => i + 1);
 
 export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverlordSquad }) {
   const ov = { ...createDefaultOverlord(), ...(overlord || {}) };
+  const [powerText, setPowerText] = useState(
+    ov.manualPowerM !== undefined && ov.manualPowerM !== null ? String(ov.manualPowerM) : ''
+  );
+
+  useEffect(() => {
+    setPowerText(
+      ov.manualPowerM !== undefined && ov.manualPowerM !== null ? String(ov.manualPowerM) : ''
+    );
+  }, [ov.manualPowerM]);
+
   const res = calculateOverlordResources(ov);
   const overlordPower = calculateOverlordPower(ov);
   const bondRank = Math.min(12, Math.max(1, ov.bondRank || 1));
@@ -35,11 +45,18 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
 
   const handleReset = () => {
     if (!window.confirm('Reset all Overlord stats, bond and skills?')) return;
+    setPowerText('');
     onUpdateOverlord({
       ...createDefaultOverlord(),
       avatar: ov.avatar,
       manualPowerM: '',
     });
+  };
+
+  const handlePowerInput = (val) => {
+    const normalized = val.replace(',', '.');
+    setPowerText(normalized);
+    onUpdateOverlord({ manualPowerM: normalized });
   };
 
   const updateMainLevel = (rawVal) => {
@@ -125,7 +142,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     fontSize: '13px',
     fontWeight: 'bold',
   };
-      return (
+        return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -202,13 +219,12 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
                 <span style={{ fontSize: '11px', color: '#fb923c' }}>Real M:</span>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="text"
+                  inputMode="decimal"
                   placeholder="Auto"
-                  value={ov.manualPowerM ?? ''}
-                  onChange={(e) => onUpdateOverlord({ manualPowerM: e.target.value })}
-                  style={{ ...numInputStyle, width: '58px', padding: '2px 0', fontSize: '12px', borderColor: ov.manualPowerM ? '#fb923c' : '#475569' }}
+                  value={powerText}
+                  onChange={(e) => handlePowerInput(e.target.value)}
+                  style={{ ...numInputStyle, width: '62px', padding: '3px 0', fontSize: '12px', borderColor: powerText ? '#fb923c' : '#475569' }}
                 />
               </div>
             </div>
@@ -321,7 +337,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
             ))}
           </div>
         </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {OVERLORD_STATS.map((st) => {
             const val = (ov.training && ov.training[st.key]) || 1;
             return (
@@ -480,4 +496,4 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       </div>
     </div>
   );
-                      }
+                                                                        }

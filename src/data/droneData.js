@@ -150,13 +150,6 @@ export const calculateDronePower = (drone = {}) => {
   return Math.round(rawDronePower * 0.9438);
 };
 
-
-  const boostLvl = Math.max(1, drone.combatBoostLevel || 1);
-  const boostPower = boostLvl * 1_460;
-
-  return Math.round(basePower + compPower + boostPower);
-};
-
 export const calculateDroneResources = (drone = {}) => {
   const currentLvl = Math.min(250, Math.max(1, drone.level || 1));
   const { next } = getDroneModelInfo(currentLvl);
@@ -185,4 +178,4 @@ export const calculateDroneResources = (drone = {}) => {
     partsTo250,
   };
 };
-  
+           

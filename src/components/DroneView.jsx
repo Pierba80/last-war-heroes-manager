@@ -31,6 +31,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
 
   const [levelText, setLevelText] = useState(String(d.level || 1));
   const [boostText, setBoostText] = useState(String(d.combatBoostLevel || 1));
+  const [powerText, setPowerText] = useState(d.manualPowerM !== undefined && d.manualPowerM !== null ? String(d.manualPowerM) : '');
 
   useEffect(() => {
     setLevelText(String(d.level || 1));
@@ -39,6 +40,10 @@ export default function DroneView({ drone, onUpdateDrone }) {
   useEffect(() => {
     setBoostText(String(d.combatBoostLevel || 1));
   }, [d.combatBoostLevel]);
+
+  useEffect(() => {
+    setPowerText(d.manualPowerM !== undefined && d.manualPowerM !== null ? String(d.manualPowerM) : '');
+  }, [d.manualPowerM]);
 
   const { current: model } = getDroneModelInfo(d.level || 1);
   const abilityStars = getDroneAbilityStars(d.level || 1);
@@ -51,6 +56,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
 
   const handleReset = () => {
     if (!window.confirm('Reset Drone level, components, boost and chips?')) return;
+    setPowerText('');
     onUpdateDrone({
       ...createDefaultDrone(),
       stageAvatars: d.stageAvatars || {},
@@ -116,6 +122,11 @@ export default function DroneView({ drone, onUpdateDrone }) {
     }
   };
 
+  const handlePowerInput = (val) => {
+    setPowerText(val);
+    onUpdateDrone({ manualPowerM: val });
+  };
+
   const updateComponent = (key, field, rawVal, maxVal) => {
     const parsed = rawVal === '' ? 0 : Number(rawVal);
     const safe = Number.isNaN(parsed) ? 0 : parsed;
@@ -156,7 +167,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
     fontSize: '12px',
     fontWeight: 'bold',
   };
-  return (
+    return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -263,13 +274,12 @@ export default function DroneView({ drone, onUpdateDrone }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
                 <span style={{ fontSize: '11px', color: '#fb923c' }}>Real M:</span>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="text"
+                  inputMode="decimal"
                   placeholder="Auto"
-                  value={d.manualPowerM ?? ''}
-                  onChange={(e) => onUpdateDrone({ manualPowerM: e.target.value })}
-                  style={{ ...numInputStyle, width: '58px', padding: '2px 0', fontSize: '12px', borderColor: d.manualPowerM ? '#fb923c' : '#475569' }}
+                  value={powerText}
+                  onChange={(e) => handlePowerInput(e.target.value.replace(',', '.'))}
+                  style={{ ...numInputStyle, width: '62px', padding: '3px 0', fontSize: '12px', borderColor: powerText ? '#fb923c' : '#475569' }}
                 />
               </div>
             </div>
@@ -363,7 +373,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
           </div>
         </div>
       </div>
-                      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Layers size={14} color="#facc15" /> Skill Chips (Set {selectedChipSet})
@@ -539,4 +549,5 @@ export default function DroneView({ drone, onUpdateDrone }) {
       </div>
     </div>
   );
-                      }
+                }
+                    

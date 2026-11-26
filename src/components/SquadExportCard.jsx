@@ -164,7 +164,7 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
       </div>
     );
   };
-      return (
+                       return (
     <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }}>
       <div
         ref={exportRef}
@@ -212,8 +212,7 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
           }, 0);
           const ovPower = hasOverlord ? calculateOverlordPower(overlord) : 0;
           const dronePower = drone ? calculateDronePower(drone) : 0;
-          const totalPower = Math.round(heroesBasePower * (1 + synergy.bonus / 100) + ovPower + dronePower);
-        
+          const totalPower = Math.round(heroesBasePower + ovPower + dronePower);
 
           return (
             <div
@@ -286,5 +285,5 @@ export default function SquadExportCard({ exportRef, squads, progress, overlord,
       </div>
     </div>
   );
-          }
-                          
+              }
+                  

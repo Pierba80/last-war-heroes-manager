@@ -1,4 +1,5 @@
-const POWER_CALIBRATION = 2.0325;
+const HERO_POWER_CALIBRATION = 2.0325;
+const OVERLORD_POWER_CALIBRATION = 0.6404;
 
 export const formatPower = (num) => {
   if (!num || num <= 0) return '0';
@@ -19,31 +20,25 @@ export const calculateHeroPower = (hero, p = {}) => {
   const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
   const rarityMult = effectiveRarity === 'UR' ? 1.15 : effectiveRarity === 'SSR' ? 0.95 : 0.78;
 
-  // 1. EXP Level
   const level = Math.max(1, p.level || 1);
   const levelPower = Math.pow(level, 1.75) * 62 * rarityMult;
 
-  // 2. Stars & Tiers
   const totalTiers = (p.stars || 0) * 5 + (p.tiers || 0);
   const starPower = totalTiers * 24_000 * rarityMult;
 
-  // 3. Base 3 Skills
   const skills = Array.isArray(p.skills) && p.skills.length === 3 ? p.skills : Array(3).fill(1);
   const skillSum = skills.reduce((acc, lvl) => acc + Math.max(1, lvl || 1), 0);
   const skillsPower = skillSum * 6_000;
 
-  // 4. Exclusive Weapon
   const ewLevel = p.exclusiveWeaponLevel || 0;
   const weaponPower = ewLevel > 0 ? 100_000 + ewLevel * 15_000 : 0;
 
-  // 5. Awakening
   const awakenStars = p.awakeningStars || 0;
   const awakenSkill = p.awakeningSkill || 1;
   const awakenPower = awakenStars > 0
     ? awakenStars * 82_000 + awakenSkill * 6_000
     : 0;
 
-  // 6. Gear
   const gear = p.gear || {};
   const gearRarityBase = {
     None: 0,
@@ -63,7 +58,7 @@ export const calculateHeroPower = (hero, p = {}) => {
   });
 
   const rawPower = levelPower + starPower + skillsPower + weaponPower + awakenPower + gearPower;
-  return Math.round(rawPower * POWER_CALIBRATION);
+  return Math.round(rawPower * HERO_POWER_CALIBRATION);
 };
 
 export const calculateOverlordPower = (ov = {}) => {
@@ -91,6 +86,5 @@ export const calculateOverlordPower = (ov = {}) => {
   });
 
   const rawOvPower = levelPower + bondPower + trainPower + skillsPower;
-  return Math.round(rawOvPower * POWER_CALIBRATION);
+  return Math.round(rawOvPower * OVERLORD_POWER_CALIBRATION);
 };
-  

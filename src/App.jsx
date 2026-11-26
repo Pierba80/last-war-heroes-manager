@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Users, Shield, Copy, Calculator, Volume2, VolumeX, Crown } from 'lucide-react';
+import { Download, Upload, Users, Shield, Copy, Calculator, Volume2, VolumeX, Crown, Plane } from 'lucide-react';
 import { INITIAL_HEROES, createDefaultProgress } from './data/heroesData';
 import { createDefaultOverlord } from './data/overlordData';
+import { createDefaultDrone } from './data/droneData';
 import HeroCard from './components/HeroCard';
 import SquadsView from './components/SquadsView';
 import ResourcesView from './components/ResourcesView';
 import OverlordView from './components/OverlordView';
+import DroneView from './components/DroneView';
 import { musicPlayer } from './utils/musicPlayer';
 import { styles } from './styles';
 
 const STORAGE_KEY = 'last_war_heroes_progress_v1';
 const SQUADS_STORAGE_KEY = 'last_war_squads_v1';
 const OVERLORD_STORAGE_KEY = 'last_war_overlord_v1';
+const DRONE_STORAGE_KEY = 'last_war_drone_v1';
 const SQUAD_NUMBERS = Array.from({ length: 4 }, (_, i) => i + 1);
 
 const DEFAULT_SQUADS = {
@@ -62,6 +65,18 @@ export default function App() {
     return createDefaultOverlord();
   });
 
+  const [drone, setDrone] = useState(() => {
+    const saved = localStorage.getItem(DRONE_STORAGE_KEY);
+    if (saved) {
+      try {
+        return { ...createDefaultDrone(), ...JSON.parse(saved) };
+      } catch (e) {
+        return createDefaultDrone();
+      }
+    }
+    return createDefaultDrone();
+  });
+
   const [filterType, setFilterType] = useState('All');
   const [filterSquad, setFilterSquad] = useState('All');
   const [search, setSearch] = useState('');
@@ -79,11 +94,15 @@ export default function App() {
   }, [overlord]);
 
   useEffect(() => {
+    localStorage.setItem(DRONE_STORAGE_KEY, JSON.stringify(drone));
+  }, [drone]);
+
+  useEffect(() => {
     return () => {
       musicPlayer.stop();
     };
   }, []);
-                              const handleToggleMusic = async () => {
+        const handleToggleMusic = async () => {
     if (musicOn) {
       musicPlayer.stop();
       setMusicOn(false);
@@ -102,6 +121,13 @@ export default function App() {
 
   const updateOverlord = (changes) => {
     setOverlord((prev) => ({
+      ...prev,
+      ...changes,
+    }));
+  };
+
+  const updateDrone = (changes) => {
+    setDrone((prev) => ({
       ...prev,
       ...changes,
     }));
@@ -197,7 +223,7 @@ export default function App() {
 
   const handleExport = () => {
     try {
-      const backupPayload = JSON.stringify({ progress, squads, overlord }, null, 2);
+      const backupPayload = JSON.stringify({ progress, squads, overlord, drone }, null, 2);
       const blob = new Blob([backupPayload], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -214,7 +240,7 @@ export default function App() {
 
   const handleCopyBackup = async () => {
     try {
-      const backupPayload = JSON.stringify({ progress, squads, overlord });
+      const backupPayload = JSON.stringify({ progress, squads, overlord, drone });
       await navigator.clipboard.writeText(backupPayload);
       alert('Backup copied to clipboard! Paste it in your Notes app to keep it safe.');
     } catch (err) {
@@ -237,6 +263,9 @@ export default function App() {
           if (imported.overlord) {
             setOverlord({ ...createDefaultOverlord(), ...imported.overlord });
           }
+          if (imported.drone) {
+            setDrone({ ...createDefaultDrone(), ...imported.drone });
+          }
         } else {
           setProgress({ ...createDefaultProgress(), ...imported });
         }
@@ -248,7 +277,7 @@ export default function App() {
     };
     reader.readAsText(file);
   };
-        const filteredHeroes = INITIAL_HEROES.filter((hero) => {
+                                  const filteredHeroes = INITIAL_HEROES.filter((hero) => {
     const p = progress[hero.id];
     if (filterType !== 'All' && hero.type !== filterType) return false;
     if (filterSquad !== 'All' && String(p.squad) !== filterSquad) return false;
@@ -258,17 +287,17 @@ export default function App() {
 
   const navTabStyle = (active) => ({
     flex: 1,
-    padding: '8px 4px',
+    padding: '8px 2px',
     borderRadius: '8px',
     border: active ? '1px solid #facc15' : '1px solid #334155',
     backgroundColor: active ? '#1e293b' : '#0f172a',
     color: active ? '#facc15' : '#94a3b8',
     fontWeight: 'bold',
-    fontSize: '11px',
+    fontSize: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '4px',
+    gap: '3px',
     cursor: 'pointer',
   });
 
@@ -332,18 +361,21 @@ export default function App() {
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '5px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
         <button type="button" onClick={() => setActiveView('heroes')} style={navTabStyle(activeView === 'heroes')}>
-          <Shield size={14} /> Heroes
+          <Shield size={13} /> Heroes
         </button>
         <button type="button" onClick={() => setActiveView('overlord')} style={navTabStyle(activeView === 'overlord')}>
-          <Crown size={14} /> Overlord
+          <Crown size={13} /> Overlord
+        </button>
+        <button type="button" onClick={() => setActiveView('drone')} style={navTabStyle(activeView === 'drone')}>
+          <Plane size={13} /> Drone
         </button>
         <button type="button" onClick={() => setActiveView('squads')} style={navTabStyle(activeView === 'squads')}>
-          <Users size={14} /> Squads
+          <Users size={13} /> Squads
         </button>
         <button type="button" onClick={() => setActiveView('resources')} style={navTabStyle(activeView === 'resources')}>
-          <Calculator size={14} /> Resources
+          <Calculator size={13} /> Resources
         </button>
       </div>
 
@@ -402,11 +434,19 @@ export default function App() {
         />
       )}
 
+      {activeView === 'drone' && (
+        <DroneView
+          drone={drone}
+          onUpdateDrone={updateDrone}
+        />
+      )}
+
       {activeView === 'squads' && (
         <SquadsView
           progress={progress}
           squads={squads}
           overlord={overlord}
+          drone={drone}
           onAssignSlot={handleAssignSlot}
           onClearSlot={handleClearSlot}
           onResetSquad={handleResetSquad}
@@ -419,5 +459,5 @@ export default function App() {
       )}
     </div>
   );
-    }
-                    
+              }
+            

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Plane, Plus, Minus, RotateCcw, Sparkles, Database, Settings, Cpu, Zap, Camera, Star } from 'lucide-react';
+import { Plane, Plus, Minus, RotateCcw, Sparkles, Database, Settings, Cpu, Zap, Camera, Star, Layers } from 'lucide-react';
 import {
   DRONE_COMPONENTS_LIST,
   getDroneModelInfo,
@@ -14,10 +14,20 @@ import { styles } from '../styles';
 
 const CRIT_STAGES = Array.from({ length: 5 }, (_, i) => i + 1);
 const ABILITY_STARS = Array.from({ length: 6 }, (_, i) => i + 1);
+const CHIP_SETS = Array.from({ length: 4 }, (_, i) => i + 1);
+const CHIP_STAR_LIST = Array.from({ length: 5 }, (_, i) => i + 1);
+
+const CHIP_SLOTS = [
+  { key: 'top', label: 'Chip Attacco (Top)', color: '#f87171' },
+  { key: 'center', label: 'Chip Nucleo (Center)', color: '#facc15' },
+  { key: 'left', label: 'Chip Energia (Left)', color: '#38bdf8' },
+  { key: 'right', label: 'Chip Difesa (Right)', color: '#4ade80' },
+];
 
 export default function DroneView({ drone, onUpdateDrone }) {
   const d = { ...createDefaultDrone(), ...(drone || {}) };
   const fileInputRef = useRef(null);
+  const [selectedChipSet, setSelectedChipSet] = useState(1);
 
   const [levelText, setLevelText] = useState(String(d.level || 1));
   const [boostText, setBoostText] = useState(String(d.combatBoostLevel || 1));
@@ -37,9 +47,10 @@ export default function DroneView({ drone, onUpdateDrone }) {
   const res = calculateDroneResources(d);
 
   const currentAvatar = (d.stageAvatars && d.stageAvatars[model.stage]) || model.defaultImg;
+  const activeSet = (d.chipSets && d.chipSets[selectedChipSet]) || { squad: selectedChipSet, top: 0, center: 0, left: 0, right: 0 };
 
   const handleReset = () => {
-    if (!window.confirm('Reset Drone level, components and boost?')) return;
+    if (!window.confirm('Reset Drone level, components, boost and chips?')) return;
     onUpdateDrone({
       ...createDefaultDrone(),
       stageAvatars: d.stageAvatars || {},
@@ -119,6 +130,19 @@ export default function DroneView({ drone, onUpdateDrone }) {
     });
   };
 
+  const updateChipStars = (slotKey, starVal) => {
+    const nextStar = activeSet[slotKey] === starVal ? starVal - 1 : starVal;
+    onUpdateDrone({
+      chipSets: {
+        ...(d.chipSets || {}),
+        [selectedChipSet]: {
+          ...activeSet,
+          [slotKey]: Math.max(0, nextStar),
+        },
+      },
+    });
+  };
+
   const numInputStyle = {
     width: '48px',
     textAlign: 'center',
@@ -130,7 +154,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
     fontSize: '12px',
     fontWeight: 'bold',
   };
-      return (
+  return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -287,6 +311,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
         </div>
       </div>
 
+      {/* Combat Boost */}
       <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div
           style={{
@@ -328,7 +353,67 @@ export default function DroneView({ drone, onUpdateDrone }) {
           </div>
         </div>
       </div>
-                      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
+              {/* Skill Chips (4 Sets for Squads 1-4) */}
+      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Layers size={14} color="#facc15" /> Skill Chips (Set {selectedChipSet})
+          </strong>
+          <span style={{ fontSize: '10px', color: '#94a3b8' }}>Tap ★ to set chip stars</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+          {CHIP_SETS.map((setNum) => (
+            <button
+              key={setNum}
+              type="button"
+              onClick={() => setSelectedChipSet(setNum)}
+              style={{ ...styles.filterBtn(selectedChipSet === setNum), flex: 1, textAlign: 'center', padding: '5px 4px', fontSize: '11px' }}
+            >
+              Set {setNum} (S{setNum})
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          {CHIP_SLOTS.map((slot) => {
+            const stars = activeSet[slot.key] || 0;
+            return (
+              <div
+                key={slot.key}
+                style={{
+                  backgroundColor: '#0f172a',
+                  border: `1px solid ${stars > 0 ? slot.color : '#334155'}`,
+                  borderRadius: '8px',
+                  padding: '8px',
+                }}
+              >
+                <div style={{ fontSize: '10px', fontWeight: 'bold', color: slot.color, marginBottom: '5px' }}>
+                  {slot.label}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  {CHIP_STAR_LIST.map((s) => (
+                    <Star
+                      key={s}
+                      size={14}
+                      onClick={() => updateChipStars(slot.key, s)}
+                      fill={s <= stars ? '#facc15' : 'none'}
+                      color={s <= stars ? '#facc15' : '#475569'}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  ))}
+                  <span style={{ fontSize: '10px', color: '#cbd5e1', marginLeft: '4px', fontWeight: 'bold' }}>
+                    {stars}★
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 6 Drone Components */}
+      <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Cpu size={14} color="#38bdf8" /> Drone Components (6)
@@ -382,6 +467,7 @@ export default function DroneView({ drone, onUpdateDrone }) {
         </div>
       </div>
 
+      {/* Resources Needed */}
       <div style={{ backgroundColor: '#1e293b', border: '1px solid #38bdf8', borderRadius: '10px', padding: '12px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#7dd3fc', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Sparkles size={14} /> Drone Upgrade Resources
@@ -419,4 +505,5 @@ export default function DroneView({ drone, onUpdateDrone }) {
       </div>
     </div>
   );
-}
+              }
+        

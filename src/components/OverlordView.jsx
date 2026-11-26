@@ -44,7 +44,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       manualPowerM: '',
     });
   };
-    const updateMainLevel = (rawVal) => {
+      const updateMainLevel = (rawVal) => {
     const parsed = Number(rawVal);
     const safe = Number.isNaN(parsed) ? 0 : parsed;
     const clamped = Math.max(0, Math.min(60, safe));
@@ -127,7 +127,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
     fontSize: '13px',
     fontWeight: 'bold',
   };
-        return (
+                   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div
         style={{
@@ -202,8 +202,7 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
             </button>
           </div>
         </div>
-
-        {editingPower && (
+                             {editingPower && (
           <div
             style={{
               backgroundColor: '#0f172a',
@@ -310,83 +309,117 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
           </div>
         </div>
       </div>
-                            <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Layers size={14} color="#facc15" /> Skill Chips (Set {selectedChipSet})
-          </strong>
-          <span style={{ fontSize: '10px', color: '#94a3b8' }}>5★ Gold → 5★ Red</span>
+                    <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
+        <div
+          style={{
+            backgroundColor: '#0f172a',
+            padding: '10px',
+            borderRadius: '8px',
+            border: `2px solid ${bondInfo.color}`,
+            marginBottom: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: bondInfo.color, fontSize: '13px', fontWeight: 'bold' }}>
+                <Heart size={15} fill={bondInfo.color} /> Bond {bondInfo.roman}/XII • {bondInfo.label}
+              </div>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                Total Lv. {bondTotalLvl}/120 • Training Max Lv. {maxTrainCap}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <button type="button" onClick={() => updateBondRank(bondRank - 1)} style={styles.smallBtn}>
+                -
+              </button>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', color: bondInfo.color, minWidth: '32px', textAlign: 'center' }}>
+                {bondInfo.roman}
+              </span>
+              <button
+                type="button"
+                onClick={() => updateBondRank(bondRank + 1)}
+                style={{ ...styles.smallBtn, backgroundColor: bondInfo.color, color: '#0f172a' }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #1e293b', paddingTop: '6px' }}>
+            <span style={{ fontSize: '11px', color: '#cbd5e1' }}>
+              Sub-level: <strong style={{ color: bondInfo.color }}>{bondSubRoman} / X</strong>
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <button type="button" onClick={() => updateBondSub(bondSub - 1)} style={{ ...styles.smallBtn, padding: '3px 7px' }}>
+                -1
+              </button>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', color: bondInfo.color, minWidth: '30px', textAlign: 'center' }}>
+                {bondSubRoman}
+              </span>
+              <button type="button" onClick={() => updateBondSub(bondSub + 1)} style={{ ...styles.smallBtn, padding: '3px 7px' }}>
+                +1
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', pointerEvents: 'none' }}>
+            {SUB_BARS.map((bar) => (
+              <div
+                key={bar}
+                style={{
+                  flex: 1,
+                  height: '6px',
+                  borderRadius: '2px',
+                  backgroundColor: bar <= bondSub ? bondInfo.color : '#334155',
+                }}
+              />
+            ))}
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
-          {CHIP_SETS.map((setNum) => (
-            <button
-              key={setNum}
-              type="button"
-              onClick={() => setSelectedChipSet(setNum)}
-              style={{ ...styles.filterBtn(selectedChipSet === setNum), flex: 1, textAlign: 'center', padding: '5px 4px', fontSize: '11px' }}
-            >
-              Set {setNum} (S{setNum})
-            </button>
-          ))}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {CHIP_SLOTS.map((slot) => {
-            const totalStars = activeSet[slot.key] || 0;
-            const redCount = Math.max(0, totalStars - 5);
-            const isRedPhase = totalStars > 5;
-
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {OVERLORD_STATS.map((st) => {
+            const val = (ov.training && ov.training[st.key]) || 1;
             return (
               <div
-                key={slot.key}
+                key={st.key}
                 style={{
                   backgroundColor: '#0f172a',
-                  border: `1px solid ${isRedPhase ? '#ef4444' : totalStars > 0 ? slot.color : '#334155'}`,
+                  padding: '8px 10px',
                   borderRadius: '8px',
-                  padding: '8px',
+                  borderLeft: `4px solid ${st.color}`,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: 'bold', color: slot.color }}>
-                    {slot.label}
-                  </span>
-                  <span style={{ fontSize: '10px', fontWeight: 'bold', color: isRedPhase ? '#ef4444' : '#facc15' }}>
-                    {isRedPhase ? `${redCount}★ Red` : `${totalStars}★`}
-                  </span>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: st.color }}>
+                    {st.label}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                    Max Lv. {maxTrainCap}
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-                  <button
-                    type="button"
-                    onClick={() => changeChipStars(slot.key, -1)}
-                    style={{ ...styles.smallBtn, padding: '3px 6px' }}
-                  >
-                    -1
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button type="button" onClick={() => updateTraining(st.key, val - 1)} style={styles.smallBtn}>
+                    <Minus size={12} />
                   </button>
-
-                  <div style={{ display: 'flex', gap: '2px' }}>
-                    {CHIP_STAR_LIST.map((s) => {
-                      const isRed = s <= redCount;
-                      const isYellow = !isRed && s <= totalStars;
-                      const starColor = isRed ? '#ef4444' : isYellow ? '#facc15' : '#475569';
-                      return (
-                        <Star
-                          key={s}
-                          size={13}
-                          fill={isRed || isYellow ? starColor : 'none'}
-                          color={starColor}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => changeChipStars(slot.key, 1)}
-                    style={{ ...styles.smallBtn, padding: '3px 6px', backgroundColor: totalStars >= 5 ? '#dc2626' : '#2563eb' }}
-                  >
-                    +1
+                  <input
+                    type="number"
+                    min="1"
+                    max={maxTrainCap}
+                    value={val}
+                    onChange={(e) => updateTraining(st.key, e.target.value)}
+                    style={{ ...numInputStyle, width: '52px' }}
+                  />
+                  <button type="button" onClick={() => updateTraining(st.key, val + 1)} style={styles.smallBtn}>
+                    <Plus size={12} />
                   </button>
                 </div>
               </div>
@@ -396,51 +429,73 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
       </div>
             <div style={{ backgroundColor: '#1e293b', borderRadius: '10px', padding: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <strong style={{ fontSize: '13px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Cpu size={14} color="#38bdf8" /> Drone Components (6)
-          </strong>
-          <span style={{ fontSize: '10px', color: '#94a3b8' }}>Level & Progress %</span>
+          <strong style={{ fontSize: '13px', color: '#f8fafc' }}>Overlord Skills (5)</strong>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>Tap ★ to set skill cap</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {DRONE_COMPONENTS_LIST.map((comp) => {
-            const item = (d.components && d.components[comp.key]) || { level: 1, pct: 0 };
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {OVERLORD_SKILLS.map((sk) => {
+            const stars = (ov.skillStars && ov.skillStars[sk.key]) ?? 4;
+            const maxSkillLvl = getMaxOverlordSkillLevel(stars);
+            const val = Math.min(maxSkillLvl, (ov.skills && ov.skills[sk.key]) || 1);
+
             return (
               <div
-                key={comp.key}
+                key={sk.key}
                 style={{
                   backgroundColor: '#0f172a',
-                  border: '1px solid #334155',
+                  padding: '8px 10px',
                   borderRadius: '8px',
-                  padding: '8px',
+                  border: '1px solid #334155',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
               >
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#ef4444', marginBottom: '6px' }}>
-                  {comp.label}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#facc15' }}>
+                    {sk.name}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '3px' }}>
+                    {SKILL_STAR_LIST.map((s) => (
+                      <Star
+                        key={s}
+                        size={12}
+                        onClick={() => updateSkillStars(sk.key, s)}
+                        fill={s <= stars ? '#facc15' : 'none'}
+                        color={s <= stars ? '#facc15' : '#475569'}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    ))}
+                    <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: '4px' }}>
+                      Max {maxSkillLvl}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-                  <div>
-                    <div style={{ fontSize: '9px', color: '#94a3b8' }}>Lv.</div>
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={item.level}
-                      onChange={(e) => updateComponent(comp.key, 'level', e.target.value, 20)}
-                      style={{ ...numInputStyle, width: '42px', padding: '2px 0' }}
-                    />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '9px', color: '#94a3b8' }}>Prog %</div>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={item.pct}
-                      onChange={(e) => updateComponent(comp.key, 'pct', e.target.value, 100)}
-                      style={{ ...numInputStyle, width: '46px', padding: '2px 0' }}
-                    />
-                  </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                  <button type="button" onClick={() => updateSkillLevel(sk.key, val - 1)} style={{ ...styles.smallBtn, padding: '4px 6px' }}>
+                    <Minus size={11} />
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max={maxSkillLvl}
+                    value={val}
+                    onChange={(e) => updateSkillLevel(sk.key, e.target.value)}
+                    style={{ ...numInputStyle, width: '40px', fontSize: '12px' }}
+                  />
+                  <button type="button" onClick={() => updateSkillLevel(sk.key, val + 1)} style={{ ...styles.smallBtn, padding: '4px 6px' }}>
+                    <Plus size={11} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateSkillLevel(sk.key, maxSkillLvl)}
+                    style={{ ...styles.smallBtn, padding: '4px 6px', backgroundColor: '#2563eb', fontSize: '10px' }}
+                  >
+                    MAX
+                  </button>
                 </div>
               </div>
             );
@@ -448,41 +503,40 @@ export default function OverlordView({ overlord, onUpdateOverlord, onAssignOverl
         </div>
       </div>
 
-      <div style={{ backgroundColor: '#1e293b', border: '1px solid #38bdf8', borderRadius: '10px', padding: '12px' }}>
-        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#7dd3fc', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <Sparkles size={14} /> Drone Upgrade Resources
+      <div style={{ backgroundColor: '#1e293b', border: '1px solid #ef4444', borderRadius: '10px', padding: '12px' }}>
+        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fca5a5', marginBottom: '8px' }}>
+          Resources Needed to Max Overlord
         </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px' }}>
           <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '6px' }}>
-            <div style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Database size={13} /> Data to {res.nextModel ? res.nextModel.code : 'Lv.250'}
-            </div>
-            <strong style={{ fontSize: '14px', color: '#fff' }}>{formatPower(res.dataToNext)}</strong>
-          </div>
-
-          <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '6px' }}>
             <div style={{ color: '#facc15', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Settings size={13} /> Parts to {res.nextModel ? res.nextModel.code : 'Lv.250'}
+              <Sparkles size={13} /> Overlord Shards
             </div>
-            <strong style={{ fontSize: '14px', color: '#fff' }}>{res.partsToNext.toLocaleString()}</strong>
+            <strong style={{ fontSize: '15px', color: '#fff' }}>{res.totalShards.toLocaleString()}</strong>
           </div>
 
           <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '6px' }}>
-            <div style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Database size={13} /> Total Data to Lv.250
+            <div style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Award size={13} /> Skill Badges
             </div>
-            <strong style={{ fontSize: '14px', color: '#cbd5e1' }}>{formatPower(res.dataTo250)}</strong>
+            <strong style={{ fontSize: '15px', color: '#fff' }}>{res.skillBadges.toLocaleString()}</strong>
           </div>
 
           <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '6px' }}>
-            <div style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Settings size={13} /> Total Parts to Lv.250
+            <div style={{ color: '#4ade80', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <BookOpen size={13} /> Guidebooks
             </div>
-            <strong style={{ fontSize: '14px', color: '#cbd5e1' }}>{res.partsTo250.toLocaleString()}</strong>
+            <strong style={{ fontSize: '15px', color: '#fff' }}>{res.guidebooks.toLocaleString()}</strong>
+          </div>
+
+          <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '6px' }}>
+            <div style={{ color: '#fb923c', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <FileCheck size={13} /> Certificates
+            </div>
+            <strong style={{ fontSize: '15px', color: '#fff' }}>{res.certificates.toLocaleString()}</strong>
           </div>
         </div>
       </div>
     </div>
   );
-}
+                }

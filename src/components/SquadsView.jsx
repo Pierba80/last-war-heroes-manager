@@ -6,7 +6,7 @@ import HeroAvatar from './HeroAvatar';
 import HeroPickerModal from './HeroPickerModal';
 import SquadExportCard from './SquadExportCard';
 import { calculateHeroPower, calculateOverlordPower, formatPower } from '../utils/powerCalculator';
-import { calculateDronePower } from '../data/droneData';
+import { calculateDronePower, getDroneModelInfo } from '../data/droneData';
 import { styles } from '../styles';
 
 const SQUAD_TABS = Array.from({ length: 4 }, (_, i) => i + 1);
@@ -67,7 +67,7 @@ const getSquadSynergy = (heroIds) => {
     counter: topCount >= 3 ? counters[topType] : null,
   };
 };
-   export default function SquadsView({
+  export default function SquadsView({
   progress,
   squads,
   overlord,
@@ -83,6 +83,7 @@ const getSquadSynergy = (heroIds) => {
   const [pickingSlot, setPickingSlot] = useState(null);
   const [editingPower, setEditingPower] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportSingleSquad, setExportSingleSquad] = useState(null);
   const exportRef = useRef(null);
 
   const currentSquadSlots = squads[selectedSquad] || {};
@@ -96,8 +97,12 @@ const getSquadSynergy = (heroIds) => {
   }, 0);
   const ovPower = hasOverlord ? calculateOverlordPower(overlord) : 0;
   const dronePower = drone ? calculateDronePower(drone) : 0;
-  const autoSquadPower = Math.round(heroesBasePower + ovPower + dronePower);
+  const droneModel = drone ? getDroneModelInfo(drone.level || 1).current : null;
+  const droneAvatar = drone && droneModel
+    ? (drone.stageAvatars && drone.stageAvatars[droneModel.stage]) || droneModel.defaultImg
+    : '/drone/td1.png';
 
+  const autoSquadPower = Math.round(heroesBasePower + ovPower + dronePower);
   const manualM = squadPowers[selectedSquad];
   const hasManualPower = manualM !== undefined && manualM !== null && manualM !== '' && Number(manualM) > 0;
   const totalSquadPower = hasManualPower ? Math.round(Number(manualM) * 1_000_000) : autoSquadPower;
@@ -110,33 +115,39 @@ const getSquadSynergy = (heroIds) => {
     }
   };
 
-  const handleExportPng = async () => {
+  const triggerPngDownload = (singleSquadNum) => {
     if (!exportRef.current || isExporting) return;
     setIsExporting(true);
-    try {
-      const canvas = await html2canvas(exportRef.current, {
-        backgroundColor: '#0f172a',
-        scale: 2,
-        useCORS: true,
-      });
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `last-war-all-squads-${new Date().toISOString().slice(0, 10)}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }, 'image/png');
-    } catch (err) {
-      alert('Could not generate PNG image.');
-    } finally {
-      setIsExporting(false);
-    }
+    setExportSingleSquad(singleSquadNum);
+
+    setTimeout(async () => {
+      try {
+        const canvas = await html2canvas(exportRef.current, {
+          backgroundColor: '#0f172a',
+          scale: 2,
+          useCORS: true,
+        });
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          const fileSuffix = singleSquadNum ? `squad-${singleSquadNum}` : 'all-squads';
+          link.download = `last-war-${fileSuffix}-${new Date().toISOString().slice(0, 10)}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }, 'image/png');
+      } catch (err) {
+        alert('Could not generate PNG image.');
+      } finally {
+        setIsExporting(false);
+        setExportSingleSquad(null);
+      }
+    }, 120);
   };
-       const getRarityBorder = (hero) => {
+      const getRarityBorder = (hero) => {
     const p = progress[hero.id] || {};
     const effectiveRarity = p.isPromotedUR ? 'UR' : hero.rarity;
     if (effectiveRarity === 'UR') return '#eab308';
@@ -236,7 +247,7 @@ const getSquadSynergy = (heroIds) => {
       </div>
     );
   };
-        return (
+      return (
     <div>
       <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
         {SQUAD_TABS.map((num) => (
@@ -267,7 +278,7 @@ const getSquadSynergy = (heroIds) => {
           border: `1px solid ${synergy.bonus > 0 ? '#eab308' : '#334155'}`,
           borderRadius: '10px',
           padding: '10px 12px',
-          marginBottom: '12px',
+          marginBottom: '10px',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
@@ -334,8 +345,7 @@ const getSquadSynergy = (heroIds) => {
             </button>
           )}
         </div>
-
-        {editingPower && (
+                {editingPower && (
           <div
             style={{
               backgroundColor: '#0f172a',
@@ -390,6 +400,50 @@ const getSquadSynergy = (heroIds) => {
         )}
       </div>
 
+      {drone && droneModel && (
+        <div
+          style={{
+            backgroundColor: '#0f172a',
+            border: `1px solid ${droneModel.color}`,
+            borderRadius: '10px',
+            padding: '8px 10px',
+            marginBottom: '10px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <img
+              src={droneAvatar}
+              alt={droneModel.name}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '7px',
+                border: `1px solid ${droneModel.color}`,
+                objectFit: 'cover',
+              }}
+            />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Plane size={13} color={droneModel.color} />
+                <strong style={{ fontSize: '12px', color: droneModel.color }}>
+                  Drone {droneModel.code} • Lv.{drone.level || 1} ({formatPower(dronePower)})
+                </strong>
+              </div>
+              <div style={{ fontSize: '10px', color: '#cbd5e1' }}>
+                Active Chip Set {selectedSquad} • Combat Boost Lv.{drone.combatBoostLevel || 1}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {hasOverlord && (
         <div
           style={{
@@ -408,18 +462,18 @@ const getSquadSynergy = (heroIds) => {
               hero={{ id: 'overlord', name: 'Overlord' }}
               avatar={overlord.avatar}
               borderColor="#ef4444"
-              size={36}
+              size={34}
               editable={false}
             />
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Crown size={13} color="#facc15" />
-                <strong style={{ fontSize: '13px', color: '#fca5a5' }}>
+                <strong style={{ fontSize: '12px', color: '#fca5a5' }}>
                   Overlord • Lv.{overlord.level || 1} ({formatPower(ovPower)})
                 </strong>
               </div>
               <div style={{ fontSize: '10px', color: '#cbd5e1' }}>
-                ATK/DEF/PS: {overlord.training?.atk || 1}/{overlord.training?.def || 1}/{overlord.training?.hp || 1} • Skills: {overlord.skills?.strike || 1}/{overlord.skills?.roar || 1}/{overlord.skills?.brutal || 1}/{overlord.skills?.instinct || 1}/{overlord.skills?.command || 1}
+                ATK/DEF/PS: {overlord.training?.atk || 1}/{overlord.training?.def || 1}/{overlord.training?.hp || 1}
               </div>
             </div>
           </div>
@@ -442,8 +496,7 @@ const getSquadSynergy = (heroIds) => {
           </button>
         </div>
       )}
-
-      <div style={{ marginBottom: '12px' }}>
+                    <div style={{ marginBottom: '12px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Users size={14} /> Front Row (Defense / Tank)
         </div>
@@ -452,7 +505,7 @@ const getSquadSynergy = (heroIds) => {
         </div>
       </div>
 
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: '14px' }}>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Users size={14} /> Back Row (Attack / Support)
         </div>
@@ -461,29 +514,53 @@ const getSquadSynergy = (heroIds) => {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleExportPng}
-        disabled={isExporting}
-        style={{
-          width: '100%',
-          padding: '12px',
-          borderRadius: '10px',
-          backgroundColor: '#1d4ed8',
-          border: '1px solid #3b82f6',
-          color: '#ffffff',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          cursor: 'pointer',
-        }}
-      >
-        <ImageIcon size={18} />
-        {isExporting ? 'Generating Image...' : 'Export All Squads (1–4) as PNG'}
-      </button>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <button
+          type="button"
+          onClick={() => triggerPngDownload(selectedSquad)}
+          disabled={isExporting}
+          style={{
+            padding: '11px 6px',
+            borderRadius: '10px',
+            backgroundColor: '#0f766e',
+            border: '1px solid #14b8a6',
+            color: '#ffffff',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '5px',
+            cursor: 'pointer',
+          }}
+        >
+          <ImageIcon size={15} />
+          {isExporting && exportSingleSquad === selectedSquad ? 'Generating...' : `Export S${selectedSquad} PNG`}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => triggerPngDownload(null)}
+          disabled={isExporting}
+          style={{
+            padding: '11px 6px',
+            borderRadius: '10px',
+            backgroundColor: '#1d4ed8',
+            border: '1px solid #3b82f6',
+            color: '#ffffff',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '5px',
+            cursor: 'pointer',
+          }}
+        >
+          <ImageIcon size={15} />
+          {isExporting && exportSingleSquad === null ? 'Generating...' : 'Export All (1–4)'}
+        </button>
+      </div>
 
       <SquadExportCard
         exportRef={exportRef}
@@ -492,6 +569,7 @@ const getSquadSynergy = (heroIds) => {
         overlord={overlord}
         drone={drone}
         squadPowers={squadPowers}
+        exportSingleSquad={exportSingleSquad}
         getSynergyFn={getSquadSynergy}
       />
 
@@ -509,5 +587,4 @@ const getSquadSynergy = (heroIds) => {
       )}
     </div>
   );
-                }
-                         
+  }

@@ -1,41 +1,41 @@
 export const OVERLORD_SKILLS = [
-  { key: 'strike', name: "Overlord's Strike", sub: '1st Skill (Active)' },
-  { key: 'roar', name: 'Furious Roar', sub: '2nd Skill (Attack)' },
-  { key: 'brutal', name: 'Ruggito Brutale', sub: '3rd Skill (Tactics)' },
-  { key: 'instinct', name: 'Primal Instinct', sub: '4th Skill (Defense)' },
-  { key: 'command', name: 'Overlord Command', sub: '5th Skill (Passive)' },
+  { key: 'strike', name: 'Overlord Strike', type: 'Active' },
+  { key: 'roar', name: 'Primal Roar', type: 'Passive' },
+  { key: 'brutal', name: 'Brutal Force', type: 'Passive' },
+  { key: 'instinct', name: 'Apex Instinct', type: 'Passive' },
+  { key: 'command', name: 'Warlord Command', type: 'Passive' },
 ];
 
 export const OVERLORD_STATS = [
-  { key: 'atk', label: 'ATK (Attacco)', color: '#f87171' },
-  { key: 'def', label: 'DEF (Difesa)', color: '#38bdf8' },
-  { key: 'hp', label: 'PS (Vita / HP)', color: '#4ade80' },
+  { key: 'atk', label: 'ATK Training', color: '#f87171' },
+  { key: 'def', label: 'DEF Training', color: '#38bdf8' },
+  { key: 'hp', label: 'HP Training', color: '#4ade80' },
 ];
 
 export const SUB_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
-export const BOND_TIERS = [
-  { rank: 1, roman: 'I', label: 'Novizio', color: '#94a3b8', maxTrain: 100 },
-  { rank: 2, roman: 'II', label: 'Apprendista', color: '#4ade80', maxTrain: 140 },
-  { rank: 3, roman: 'III', label: 'Alleato', color: '#10b981', maxTrain: 180 },
-  { rank: 4, roman: 'IV', label: 'Compagno', color: '#38bdf8', maxTrain: 220 },
-  { rank: 5, roman: 'V', label: 'Partner Vincolato', color: '#3b82f6', maxTrain: 260 },
-  { rank: 6, roman: 'VI', label: 'Fedele', color: '#818cf8', maxTrain: 300 },
-  { rank: 7, roman: 'VII', label: 'Protettore', color: '#c084fc', maxTrain: 340 },
-  { rank: 8, roman: 'VIII', label: 'Guardiano', color: '#e879f9', maxTrain: 380 },
-  { rank: 9, roman: 'IX', label: 'Campione', color: '#facc15', maxTrain: 420 },
-  { rank: 10, roman: 'X', label: 'Eroe', color: '#fb923c', maxTrain: 460 },
-  { rank: 11, roman: 'XI', label: 'Leggenda', color: '#f87171', maxTrain: 480 },
-  { rank: 12, roman: 'XII', label: 'Supremo', color: '#ef4444', maxTrain: 500 },
+export const BOND_RATINGS = [
+  { rank: 1, roman: 'I', label: 'Novice Partner', color: '#94a3b8', maxTrain: 49 },
+  { rank: 2, roman: 'II', label: 'Trusted Ally', color: '#60a5fa', maxTrain: 99 },
+  { rank: 3, roman: 'III', label: 'Battle Comrade', color: '#38bdf8', maxTrain: 149 },
+  { rank: 4, roman: 'IV', label: 'Loyal Companion', color: '#34d399', maxTrain: 199 },
+  { rank: 5, roman: 'V', label: 'Sworn Guardian', color: '#4ade80', maxTrain: 249 },
+  { rank: 6, roman: 'VI', label: 'Bonded Partner', color: '#a3e635', maxTrain: 349 },
+  { rank: 7, roman: 'VII', label: 'Soulbound Ally', color: '#facc15', maxTrain: 399 },
+  { rank: 8, roman: 'VIII', label: 'Apex Herald', color: '#fbbf24', maxTrain: 449 },
+  { rank: 9, roman: 'IX', label: 'Warlord Champion', color: '#fb923c', maxTrain: 499 },
+  { rank: 10, roman: 'X', label: 'Primal Sovereign', color: '#f97316', maxTrain: 549 },
+  { rank: 11, roman: 'XI', label: 'Mythic Overlord', color: '#ef4444', maxTrain: 599 },
+  { rank: 12, roman: 'XII', label: 'Eternal Monarch', color: '#f43f5e', maxTrain: 600 },
 ];
 
-export const getBondInfo = (bondRank = 1) => {
-  const idx = Math.min(11, Math.max(0, (bondRank || 1) - 1));
-  return BOND_TIERS.at(idx);
+export const getBondInfo = (rank = 1) => {
+  return BOND_RATINGS.find((b) => b.rank === rank) || BOND_RATINGS.at(0);
 };
 
-export const getMaxOverlordSkillLevel = (stars = 4) => {
-  if (stars <= 1) return 15;
+export const getMaxOverlordSkillLevel = (stars = 0) => {
+  if (stars <= 0) return 10;
+  if (stars === 1) return 15;
   if (stars === 2) return 20;
   if (stars === 3) return 25;
   if (stars === 4) return 30;
@@ -43,73 +43,57 @@ export const getMaxOverlordSkillLevel = (stars = 4) => {
   return 40;
 };
    export const createDefaultOverlord = () => ({
-  unlocked: true,
-  avatar: null,
-  tier: 6,
-  level: 56,
-  bondRank: 5,
-  bondProgress: 8,
+  unlocked: false,
+  squad: null,
+  level: 1,
+  tier: 1,
+  bondRank: 1,
+  bondProgress: 0,
+  manualPowerM: '',
   training: {
-    atk: 309,
-    def: 324,
-    hp: 339,
+    atk: 1,
+    def: 1,
+    hp: 1,
   },
   skills: {
-    strike: 34,
-    roar: 33,
-    brutal: 30,
-    instinct: 30,
-    command: 30,
+    strike: 1,
+    roar: 1,
+    brutal: 1,
+    instinct: 1,
+    command: 1,
   },
   skillStars: {
-    strike: 5,
-    roar: 5,
+    strike: 4,
+    roar: 4,
     brutal: 4,
     instinct: 4,
     command: 4,
   },
-  squad: null,
 });
 
-export const calculateOverlordResources = (ov) => {
-  const currentLvl = Math.min(60, Math.max(0, ov.level ?? 1));
-  const remainingLevels = Math.max(0, 60 - currentLvl);
-
-  const unlockShards = ov.unlocked ? 0 : 100;
-  const totalShards = unlockShards + remainingLevels * 200;
+export const calculateOverlordResources = (ov = {}) => {
+  const maxTrain = 600;
+  const maxSkill = 40;
+  const maxLevel = 60;
 
   const tr = ov.training || { atk: 1, def: 1, hp: 1 };
-  let guidebooks = 0;
-  let certificates = 0;
-
-  ['atk', 'def', 'hp'].forEach((k) => {
-    const statLvl = Math.min(500, Math.max(1, tr[k] || 1));
-    for (let lvl = statLvl + 1; lvl <= 500; lvl++) {
-      guidebooks += Math.round(15 + lvl * 2.2);
-      if (lvl % 20 === 0) {
-        certificates += Math.floor(lvl / 20) * 10;
-      }
-    }
-  });
+  const atkRem = Math.max(0, maxTrain - (tr.atk || 1));
+  const defRem = Math.max(0, maxTrain - (tr.def || 1));
+  const hpRem = Math.max(0, maxTrain - (tr.hp || 1));
+  const totalTrainLevels = atkRem + defRem + hpRem;
 
   const sk = ov.skills || {};
-  const st = ov.skillStars || {};
-  let skillBadges = 0;
-
+  let totalSkillLevels = 0;
   OVERLORD_SKILLS.forEach((s) => {
-    const val = Math.min(40, Math.max(1, sk[s.key] || 1));
-    const cap = getMaxOverlordSkillLevel(st[s.key] ?? 4);
-    const target = Math.max(val, cap);
-    for (let lvl = val + 1; lvl <= target; lvl++) {
-      skillBadges += Math.round(25 + Math.pow(lvl, 1.85) * 3);
-    }
+    totalSkillLevels += Math.max(0, maxSkill - (sk[s.key] || 1));
   });
 
+  const lvlRem = Math.max(0, maxLevel - (ov.level ?? 1));
+
   return {
-    totalShards,
-    guidebooks,
-    certificates,
-    skillBadges,
+    guidebooks: totalTrainLevels * 145,
+    certificates: Math.floor(totalTrainLevels / 5) * 18,
+    skillBadges: totalSkillLevels * 120,
+    totalShards: lvlRem * 28,
   };
 };
-  

@@ -63,6 +63,11 @@ export const getDroneModelInfo = (level) => {
   return model || DRONE_MODELS[0];
 };
 
+export const getDroneAbilityStars = (level) => {
+  const lvl = Math.max(1, Number(level) || 1);
+  return Math.min(5, Math.floor(lvl / 50) + 1);
+};
+
 export const DRONE_COMPONENTS_LIST = [
   { key: 'radar', label: 'Radar Tattico' },
   { key: 'targeting', label: 'Mirino Ottico' },
@@ -81,6 +86,14 @@ export const COMBAT_BOOST_STAGES = [
   { stage: 'VI', minLvl: 750, maxLvl: 899, color: '#fb923c', presets: 4, chipBoost: 5 },
   { stage: 'VII', minLvl: 900, maxLvl: 999, color: '#ef4444', presets: 4, chipBoost: 5 },
 ];
+
+export const getCombatBoostInfo = (combatBoostLvl) => {
+  const lvl = Number(combatBoostLvl) || 10;
+  const stage = COMBAT_BOOST_STAGES.find(
+    (s) => lvl >= s.minLvl && lvl <= s.maxLvl
+  );
+  return stage || COMBAT_BOOST_STAGES[0];
+};
 
 export const DRONE_PARTS_MILESTONES_PRE150 = [
   { level: 1, parts: 5, battleData: 1000 },
@@ -139,9 +152,7 @@ export const calculateDronePower = (level, components = {}, combatBoostLvl = 10)
     return total + (Number(compLvl) || 1) * 45000;
   }, 0);
 
-  const boostStage = COMBAT_BOOST_STAGES.find(
-    (s) => combatBoostLvl >= s.minLvl && combatBoostLvl <= s.maxLvl
-  );
+  const boostStage = getCombatBoostInfo(combatBoostLvl);
   const boostPower = boostStage ? (Number(combatBoostLvl) || 0) * 8000 : 0;
 
   return basePower + componentsPower + boostPower;
@@ -181,3 +192,8 @@ export const INITIAL_DRONE_CONFIG = {
     missile: 5,
   },
 };
+
+export const createDefaultDrone = () => ({
+  ...INITIAL_DRONE_CONFIG,
+  components: { ...INITIAL_DRONE_CONFIG.components },
+});

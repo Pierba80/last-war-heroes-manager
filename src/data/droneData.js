@@ -83,7 +83,7 @@ export const DRONE_COMPONENTS_LIST = [
 ];
 
 export const COMBAT_BOOST_STAGES = [
-  { stage: 'I', minLvl: 10, maxLvl: 149, color: '#94a3b8', presets: 1, chipBoost: 0 },
+  { stage: 'I', minLvl: 1, maxLvl: 149, color: '#94a3b8', presets: 1, chipBoost: 0 },
   { stage: 'II', minLvl: 150, maxLvl: 299, color: '#4ade80', presets: 2, chipBoost: 1 },
   { stage: 'III', minLvl: 300, maxLvl: 449, color: '#38bdf8', presets: 3, chipBoost: 2 },
   { stage: 'IV', minLvl: 450, maxLvl: 599, color: '#c084fc', presets: 4, chipBoost: 3 },
@@ -93,7 +93,7 @@ export const COMBAT_BOOST_STAGES = [
 ];
 
 export const getCombatBoostInfo = (combatBoostLvl) => {
-  const lvl = Number(combatBoostLvl) || 1;
+  const lvl = Math.max(1, Number(combatBoostLvl) || 1);
   const current =
     COMBAT_BOOST_STAGES.find((s) => lvl >= s.minLvl && lvl <= s.maxLvl) ||
     COMBAT_BOOST_STAGES;
@@ -151,6 +151,17 @@ export const getDronePartsForLevel = (level) => {
   return 12000 + (lvl - 250) * 500;
 };
 
+export const getDroneDataForLevel = (level) => {
+  const lvl = Math.max(1, Number(level) || 1);
+  if (lvl <= 250) {
+    const milestone = [...ALL_DRONE_MILESTONES]
+      .reverse()
+      .find((m) => lvl >= m.level);
+    return milestone ? milestone.battleData : 1000;
+  }
+  return 12500000 + (lvl - 250) * 500000;
+};
+
 export const calculateDronePower = (droneInput = {}) => {
   if (typeof droneInput === 'number') {
     return droneInput * 12500;
@@ -165,7 +176,8 @@ export const calculateDronePower = (droneInput = {}) => {
   }
 
   const lvl = Math.max(1, Number(d.level) || 1);
-  const basePower = lvl * 12500;
+  const critStage = Math.max(1, Number(d.critStage) || 1);
+  const basePower = lvl * 12500 + (critStage - 1) * 25000;
 
   const componentsPower = Object.values(d.components || {}).reduce((total, comp) => {
     const compLvl = typeof comp === 'object' ? Number(comp?.level) || 1 : Number(comp) || 1;
@@ -178,57 +190,56 @@ export const calculateDronePower = (droneInput = {}) => {
 
   const chipSetsPower = Object.values(d.chipSets || {}).reduce((sum, set) => {
     if (!set || typeof set !== 'object') return sum;
-    const stars = (Number(set.top) || 0) + (Number(set.center) || 0) + (Number(set.left) || 0) + (Number(set.right) || 0);
+    const stars =
+      (Number(set.top) || 0) +
+      (Number(set.center) || 0) +
+      (Number(set.left) || 0) +
+      (Number(set.right) || 0);
     return sum + stars * 15000;
   }, 0);
 
   return basePower + componentsPower + boostPower + chipSetsPower;
 };
 
-export const calculateDroneResources = (droneInput = {}, targetLevelArg) => {
-  const start =
+const sumResourcesRange = (fromLvl, toLvl) => {
+  let parts = 0;
+  let data = 0;
+  for (let lvl = fromLvl; lvl < toLvl; lvl++) {
+    parts += getDronePartsForLevel(lvl);
+    data += getDroneDataForLevel(lvl);
+  }
+  return { parts, data };
+};
+
+export const calculateDroneResources = (droneInput = {}) => {
+  const currentLvl =
     typeof droneInput === 'object'
       ? Math.max(1, Number(droneInput?.level) || 1)
       : Math.max(1, Number(droneInput) || 1);
 
-  const nextMilestone = ALL_DRONE_MILESTONES.find((m) => m.level > start);
-  const defaultTarget = nextMilestone ? nextMilestone.level : start + 5;
+  const { next: nextModel } = getDroneModelInfo(currentLvl);
+  const nextTarget = nextModel ? nextModel.minLevel : 250;
 
-  const end =
-    typeof droneInput === 'object'
-      ? Math.max(start + 1, Number(droneInput?.targetLevel) || defaultTarget)
-      : Math.max(start + 1, Number(targetLevelArg) || defaultTarget);
+  const toNext = currentLvl < nextTarget
+    ? sumResourcesRange(currentLvl, nextTarget)
+    : { parts: 0, data: 0 };
 
-  let totalParts = 0;
-  let totalBattleData = 0;
-
-  for (let lvl = start; lvl < end; lvl++) {
-    totalParts += getDronePartsForLevel(lvl);
-    const milestone = [...ALL_DRONE_MILESTONES]
-      .reverse()
-      .find((m) => lvl >= m.level);
-    totalBattleData += milestone ? milestone.battleData : lvl * 12000;
-  }
-
-  const currentParts = getDronePartsForLevel(start);
-  const currentMilestone = [...ALL_DRONE_MILESTONES]
-    .reverse()
-    .find((m) => start >= m.level);
-  const currentBattleData = currentMilestone ? currentMilestone.battleData : start * 12000;
+  const to250 = currentLvl < 250
+    ? sumResourcesRange(currentLvl, 250)
+    : { parts: 0, data: 0 };
 
   return {
-    parts: currentParts,
-    battleData: currentBattleData,
-    nextParts: currentParts,
-    nextBattleData: currentBattleData,
-    totalParts,
-    totalBattleData,
-    nextMilestoneLevel: end,
+    nextModel,
+    dataToNext: toNext.data,
+    partsToNext: toNext.parts,
+    dataTo250: to250.data,
+    partsTo250: to250.parts,
   };
 };
 
 export const createDefaultDrone = () => ({
   level: 1,
+  critStage: 1,
   combatBoostLevel: 1,
   manualPowerM: '',
   stageAvatars: {},
@@ -249,4 +260,4 @@ export const createDefaultDrone = () => ({
 });
 
 export const INITIAL_DRONE_CONFIG = createDefaultDrone();
-  
+    

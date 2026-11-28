@@ -55,6 +55,14 @@ export const DRONE_MODELS = [
   },
 ];
 
+export const getDroneModelInfo = (level) => {
+  const lvl = Math.max(1, Number(level) || 1);
+  const model = [...DRONE_MODELS]
+    .reverse()
+    .find((m) => lvl >= m.minLevel);
+  return model || DRONE_MODELS[0];
+};
+
 export const DRONE_COMPONENTS_LIST = [
   { key: 'radar', label: 'Radar Tattico' },
   { key: 'targeting', label: 'Mirino Ottico' },
@@ -93,15 +101,34 @@ export const DRONE_PARTS_MILESTONES_PRE150 = [
   { level: 150, parts: 2200, battleData: 1800000 },
 ];
 
+export const DRONE_PARTS_MILESTONES_151_250 = [
+  { level: 151, parts: 2350, battleData: 1950000 },
+  { level: 160, parts: 2800, battleData: 2400000 },
+  { level: 170, parts: 3400, battleData: 3000000 },
+  { level: 180, parts: 4100, battleData: 3700000 },
+  { level: 190, parts: 4900, battleData: 4500000 },
+  { level: 200, parts: 5800, battleData: 5500000 },
+  { level: 210, parts: 6800, battleData: 6600000 },
+  { level: 220, parts: 7900, battleData: 7800000 },
+  { level: 230, parts: 9100, battleData: 9200000 },
+  { level: 240, parts: 10400, battleData: 10800000 },
+  { level: 250, parts: 12000, battleData: 12500000 },
+];
+
+export const ALL_DRONE_MILESTONES = [
+  ...DRONE_PARTS_MILESTONES_PRE150,
+  ...DRONE_PARTS_MILESTONES_151_250,
+];
+
 export const getDronePartsForLevel = (level) => {
   const lvl = Math.max(1, Number(level) || 1);
-  if (lvl <= 150) {
-    const milestone = [...DRONE_PARTS_MILESTONES_PRE150]
+  if (lvl <= 250) {
+    const milestone = [...ALL_DRONE_MILESTONES]
       .reverse()
       .find((m) => lvl >= m.level);
     return milestone ? milestone.parts : 5;
   }
-  return 2200 + (lvl - 150) * 150;
+  return 12000 + (lvl - 250) * 500;
 };
 
 export const calculateDronePower = (level, components = {}, combatBoostLvl = 10) => {
@@ -129,7 +156,10 @@ export const calculateDroneResources = (currentLevel, targetLevel) => {
 
   for (let lvl = start; lvl < end; lvl++) {
     totalParts += getDronePartsForLevel(lvl);
-    totalBattleData += lvl * 12000;
+    const milestone = [...ALL_DRONE_MILESTONES]
+      .reverse()
+      .find((m) => lvl >= m.level);
+    totalBattleData += milestone ? milestone.battleData : lvl * 12000;
   }
 
   return {
@@ -151,4 +181,3 @@ export const INITIAL_DRONE_CONFIG = {
     missile: 5,
   },
 };
-  
